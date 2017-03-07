@@ -11,7 +11,7 @@ int pmmin;
 int pmmax;
 
 int mod = 0;
-int channel = CHANNEL_KEYBOARD;
+int channel = CHANNEL_DRUM;
 
 const int selector         = 7;
 const int channelPlus      = 3;
@@ -24,16 +24,16 @@ int statusSelcetor         = 0;
 // holeAX[2] 读值有改变才进行输出  lastStatusAX
 // holeAX[3] note map              NOTE_A4
 // holeAX[4] lastNoteAX, 变调的值  lastNoteAX
+int holeA1[]  = {0, 0, 0, 0};
 int holeA2[]  = {0, 0, 0, 0};
-int holeA3[]  = {0, 0, 0, 0};
-int holeA4[]  = {0, 0, 0, NOTE_A4, 0};
-int holeA5[]  = {0, 0, 0, NOTE_A5, 0};
-int holeA6[]  = {0, 0, 0, NOTE_A6, 0};
-int holeA7[]  = {0, 0, 0, NOTE_A7, 0};
-int holeA8[]  = {0, 0, 0, NOTE_A8, 0};
-int holeA9[]  = {0, 0, 0, NOTE_A9, 0};
-int holeA10[] = {0, 0, 0, NOTE_A10, 0};
-int holeA11[] = {0, 0, 0, NOTE_A11, 0};
+int holeC[]  = {0, 0, 0, NOTE_C, 0};
+int holeD[]  = {0, 0, 0, NOTE_D, 0};
+int holeE[]  = {0, 0, 0, NOTE_E, 0};
+int holeF[]  = {0, 0, 0, NOTE_F, 0};
+int holeG[]  = {0, 0, 0, NOTE_G, 0};
+int holeA[]  = {0, 0, 0, NOTE_A, 0};
+int holeB[]  = {0, 0, 0, NOTE_B, 0};
+int holeCP[] = {0, 0, 0, NOTE_CP, 0};
 
 //==============================================
 
@@ -47,37 +47,37 @@ void setup() {
 void readStatus(){
   //statusSelcetor = digitalRead(selector);
   //if(statusSelcetor == 0){    // hole 开关
+    holeA1[0]  = analogRead(A1);
     holeA2[0]  = analogRead(A2);
-    holeA3[0]  = analogRead(A3);
-    holeA4[0]  = analogRead(A4);
-    holeA5[0]  = analogRead(A5);
-    holeA6[0]  = analogRead(A6);
-    holeA7[0]  = analogRead(A7);
-    holeA8[0]  = analogRead(A8);
-    holeA9[0]  = analogRead(A9);
-    holeA10[0] = analogRead(A10);
-    holeA11[0] = analogRead(A11);
+    holeC[0]   = analogRead(A3);
+    holeD[0]   = analogRead(A4);
+    holeE[0]   = analogRead(A5);
+    holeF[0]   = analogRead(A6);
+    holeG[0]   = analogRead(A7);
+    holeA[0]   = analogRead(A8);
+    holeB[0]   = analogRead(A9);
+    holeCP[0]  = analogRead(A10);
 
+    if (holeA1[0] < MINTOUCH)    holeA1[1]  = 0;
+    else                      holeA1[1]   = 1;
     if (holeA2[0] < MINTOUCH)    holeA2[1]   = 0;
     else                      holeA2[1]   = 1;
-    if (holeA3[0] < MINTOUCH)    holeA3[1]   = 0;
-    else                      holeA3[1]   = 1;
-    if (holeA4[0] < MINTOUCH)    holeA4[1]   = 0;
-    else                      holeA4[1]   = 1;
-    if (holeA5[0] < MINTOUCH)    holeA5[1]   = 0;
-    else                      holeA5[1]   = 1;
-    if (holeA6[0] < MINTOUCH)    holeA6[1]   = 0;
-    else                      holeA6[1]   = 1;
-    if (holeA7[0] < MINTOUCH)    holeA7[1]   = 0;
-    else                      holeA7[1]   = 1;
-    if (holeA8[0] < MINTOUCH)    holeA8[1]   = 0;
-    else                      holeA8[1]   = 1;
-    if (holeA9[0] < MINTOUCH)    holeA9[1]   = 0;
-    else                      holeA9[1]   = 1;
-    if (holeA10[0] < MINTOUCH)   holeA10[1]  = 0;
-    else                      holeA10[1]  = 1;
-    if (holeA11[0] < MINTOUCH)   holeA11[1]  = 0;
-    else                      holeA11[1]  = 1;
+    if (holeA3[0] < MINTOUCH)    holeC[1]   = 0;
+    else                      holeC[1]   = 1;
+    if (holeA4[0] < MINTOUCH)    holeD[1]   = 0;
+    else                      holeD[1]   = 1;
+    if (holeA5[0] < MINTOUCH)    holeE[1]   = 0;
+    else                      holeE[1]   = 1;
+    if (holeA6[0] < MINTOUCH)    holeF[1]   = 0;
+    else                      holeF[1]   = 1;
+    if (holeA7[0] < MINTOUCH)    holeG[1]   = 0;
+    else                      holeG[1]   = 1;
+    if (holeA8[0] < MINTOUCH)    holeA[1]   = 0;
+    else                      holeA[1]   = 1;
+    if (holeA9[0] < MINTOUCH)    holeB[1]   = 0;
+    else                      holeB[1]   = 1;
+    if (holeA10[0] < MINTOUCH)   holeCP[1]  = 0;
+    else                      holeACP[1]  = 1;
 /*  // 音量可调节
     //currentVelocity = map(valueA0, 0, 1024, 0, 127);
     int ec1 = map(valueA3, pmmin, pmmax, 0, 127);
@@ -88,15 +88,16 @@ void readStatus(){
 */
 
 /*  // 串口绘图器
-    Serial.print(holeA3[0]);Serial.print(',');
-    Serial.print(holeA4[0]);Serial.print(',');
-    Serial.print(holeA5[0]);Serial.print(',');
-    Serial.print(holeA6[0]);Serial.print(',');
-    Serial.print(holeA7[0]);Serial.print(',');
-    Serial.print(holeA8[0]);Serial.print(',');
-    Serial.print(holeA9[0]);Serial.print(',');
-    Serial.print(holeA10[0]);Serial.print(',');
-    Serial.print(holeA11[0]);Serial.print(',');
+    Serial.print(holeA1[0]);Serial.print(',');
+    Serial.print(holeA2[0]);Serial.print(',');
+    Serial.print(holeC[0]);Serial.print(',');
+    Serial.print(holeD[0]);Serial.print(',');
+    Serial.print(holeE[0]);Serial.print(',');
+    Serial.print(holeF[0]);Serial.print(',');
+    Serial.print(holeG[0]);Serial.print(',');
+    Serial.print(holeA[0]);Serial.print(',');
+    Serial.print(holeB[0]);Serial.print(',');
+    Serial.print(holeCP[0]);Serial.print(',');
 */ //}
 }
 
@@ -138,29 +139,29 @@ void scan(){
         }
     }
   }
-  if((holeA2[1] + holeA3[1]) == 0) // A2和A3同时按下，升1个调
+  if((holeA1[1] + holeA2[1]) == 0) // A1和A2同时按下，升1个调
     mod = 1;
-  else if (holeA2[1] == 0)  // 仅A2按下，升一个八度
+  else if (holeA1[1] == 0)  // 仅A1按下，升一个八度
     mod = 12;
-  else                      // 仅A3按下，降低一个八度
+  else                      // 仅A2按下，降低一个八度
     mod = -12;
 
-  // A4
-  holeHandle(holeA4);
-  // A5
-  holeHandle(holeA5);
-  // A6
-  holeHandle(holeA6);
-  // A7
-  holeHandle(holeA7);
-  // A8
-  holeHandle(holeA8);
-  // A9
-  holeHandle(holeA9);
-  // A10
-  holeHandle(holeA10);
-  // A11
-  holeHandle(holeA11);
+  // C
+  holeHandle(holeC);
+  // D
+  holeHandle(holeD);
+  // E
+  holeHandle(holeE);
+  // F
+  holeHandle(holeF);
+  // G
+  holeHandle(holeG);
+  // A
+  holeHandle(holeA);
+  // B
+  holeHandle(holeB);
+  // CP
+  holeHandle(holeCP);
 }
 
 void loop() {

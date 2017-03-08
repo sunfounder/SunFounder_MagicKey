@@ -13,7 +13,7 @@
 // |   8    | 96  | 97  | 98  | 99  | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 |
 // |   9    | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118 | 119 |
 // |   10   | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 |     |     |     |     |
-/*
+///*
 // keyboard note
 #define NOTE_C   60   // C5
 #define NOTE_D   62   // D5
@@ -23,8 +23,8 @@
 #define NOTE_A   69   // A5
 #define NOTE_B   71   // B5
 #define NOTE_CP  72   // C6
-*/
-///*
+//*/
+/*
 // drum note
 #define NOTE_C   56   // Hi-Hat
 #define NOTE_D   61   // Crash
@@ -34,4 +34,4 @@
 #define NOTE_A   59   // Tom 2
 #define NOTE_B   63   // Ride
 #define NOTE_CP  43   // Floor Tom
-//*/
+*/

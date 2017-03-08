@@ -1,9 +1,10 @@
 #include "Keyboard.h"
 #include "keymap.h"
 
+#define DEBUG 1
 #define MAXJOYSTICK 923
 #define MINJOYSTICK 100
-#define MINTOUCH 1000
+#define MINTOUCH 938
 #define Y_AXIS 1
 #define X_AXIS 0
 int caliXAxis      = -1;  // 取值1和-1，调换方向
@@ -35,12 +36,12 @@ const int holeUp           = A1;
 const int holeLeft         = A2;
 const int holeDown         = A3;
 const int holeRight        = A4;
-const int holeA            = A5;
-const int holeB            = A6;
-const int holeX            = A7;
-const int holeY            = A8;
-const int holeStart        = A9;
-const int holeSelect       = A10;
+const int holeSelect       = A5;
+const int holeStart        = A6;
+const int holeA            = A7;
+const int holeB            = A8;
+const int holeX            = A9;
+const int holeY            = A10;
 //==============================================
 
 //==============================================
@@ -120,22 +121,11 @@ void readStatus() {
   if (valueXAxis > MAXJOYSTICK)      statusAxisRight[0]   = 0;
   else                               statusAxisRight[0]   = 1;
 
-  statusHoleUp[0]     = analogRead(holeUp);
-  statusHoleDown[0]   = analogRead(holeLeft);
-  statusHoleLeft[0]   = analogRead(holeDown);
-  statusHoleRight[0]  = analogRead(holeRight);
-  statusHoleA[0]      = analogRead(holeA);
-  statusHoleB[0]      = analogRead(holeB);
-  statusHoleX[0]      = analogRead(holeX);
-  statusHoleY[0]      = analogRead(holeY);
-  statusHoleStart[0]  = analogRead(holeStart);
-  statusHoleSelect[0] = analogRead(holeSelect);
-
   statusSelcetor = digitalRead(selector);
   if (statusSelcetor == 0){  // Enable Hole Mode
     statusHoleUp[0]     = analogRead(holeUp);
-    statusHoleDown[0]   = analogRead(holeLeft);
-    statusHoleLeft[0]   = analogRead(holeDown);
+    statusHoleLeft[0]   = analogRead(holeLeft);
+    statusHoleDown[0]   = analogRead(holeDown);
     statusHoleRight[0]  = analogRead(holeRight);
     statusHoleA[0]      = analogRead(holeA);
     statusHoleB[0]      = analogRead(holeB);
@@ -143,6 +133,8 @@ void readStatus() {
     statusHoleY[0]      = analogRead(holeY);
     statusHoleStart[0]  = analogRead(holeStart);
     statusHoleSelect[0] = analogRead(holeSelect);
+
+    if(DEBUG){printValue();}
 
     if (statusHoleUp[0] < MINTOUCH)     statusHoleUp[0]     = 0;
     else                                statusHoleUp[0]     = 1;
@@ -165,6 +157,21 @@ void readStatus() {
     if (statusHoleSelect[0] < MINTOUCH) statusHoleSelect[0] = 0;
     else                                statusHoleSelect[0] = 1;
   }
+  if(DEBUG){printValue();}
+}
+
+void printValue(){ // 串口绘图器
+  Serial.print(statusHoleUp[0]);Serial.print(',');
+  Serial.print(statusHoleLeft[0]);Serial.print(',');
+  Serial.print(statusHoleDown[0]);Serial.print(',');
+  Serial.print(statusHoleRight[0]);Serial.print(',');
+  Serial.print(statusHoleSelect[0]);Serial.print(',');
+  Serial.print(statusHoleStart[0]);Serial.print(',');
+  Serial.print(statusHoleA[0]);Serial.print(',');
+  Serial.print(statusHoleB[0]);Serial.print(',');
+  Serial.print(statusHoleX[0]);Serial.print(',');
+  Serial.print(statusHoleY[0]);Serial.print(',');
+  Serial.print(MINTOUCH);Serial.print(',');
 }
 
 // Handle press command

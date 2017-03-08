@@ -1,21 +1,22 @@
 #include "MIDIUSB.h"
 #include "notemap.h"
 
+#define DEBUG 1
 #define MINTOUCH 900
-#define CHANNEL_KEYBOARD 0
-#define CHANNEL_DRUM 9  // CHANNEL
-#define CONTROL_VOLUME  7
+#define CHANNEL_KEYBOARD 0  // CHANNEL
+#define CHANNEL_DRUM 9      // CHANNEL
+#define CONTROL_VOLUME  7   // 控制种类,7表示更改channel值 Continuous Controllers
+// 更多midi控制参数 http://nickfever.com/music/midi-cc-list
 
-int currentVelocity = 127;
-int pmmin;
-int pmmax;
+int currentVelocity = 127;  // 音符力度0~127 Velocity parameter
 
-int mod = 0;
-int channel = CHANNEL_DRUM;
+int mod = 0;                // 音阶升降参数 Octave parameter
+
+int channel = CHANNEL_KEYBOARD;
 
 const int selector         = 7;
-const int channelPlus      = 3;
-const int channelMinus     = 2;
+const int channelPlus      = 3;  // pin A
+const int channelMinus     = 2;  // pin B
 int statusSelcetor         = 0;
 //==============================================
 // Set variables
@@ -24,8 +25,8 @@ int statusSelcetor         = 0;
 // holeAX[2] 读值有改变才进行输出  lastStatusAX
 // holeAX[3] note map              NOTE_A4
 // holeAX[4] lastNoteAX, 变调的值  lastNoteAX
-int holeA1[]  = {0, 0, 0, 0};
-int holeA2[]  = {0, 0, 0, 0};
+int holeA1[] = {0, 0, 0, 0};
+int holeA2[] = {0, 0, 0, 0};
 int holeC[]  = {0, 0, 0, NOTE_C, 0};
 int holeD[]  = {0, 0, 0, NOTE_D, 0};
 int holeE[]  = {0, 0, 0, NOTE_E, 0};
@@ -41,12 +42,12 @@ void setup() {
   Serial.begin(115200);
   pinMode(channelPlus, INPUT_PULLUP);
   pinMode(channelMinus, INPUT_PULLUP);
-  controlChange(channel, CONTROL_VOLUME, 127);
+  controlChange(channel, CONTROL_VOLUME, 127); // 切换channel
 }
 
 void readStatus(){
-  //statusSelcetor = digitalRead(selector);
-  //if(statusSelcetor == 0){    // hole 开关
+  statusSelcetor = digitalRead(selector);
+  if(statusSelcetor == 0){    // hole 开关
     holeA1[0]  = analogRead(A1);
     holeA2[0]  = analogRead(A2);
     holeC[0]   = analogRead(A3);
@@ -62,44 +63,41 @@ void readStatus(){
     else                      holeA1[1]   = 1;
     if (holeA2[0] < MINTOUCH)    holeA2[1]   = 0;
     else                      holeA2[1]   = 1;
-    if (holeA3[0] < MINTOUCH)    holeC[1]   = 0;
+    if (holeC[0] < MINTOUCH)    holeC[1]   = 0;
     else                      holeC[1]   = 1;
-    if (holeA4[0] < MINTOUCH)    holeD[1]   = 0;
+    if (holeD[0] < MINTOUCH)    holeD[1]   = 0;
     else                      holeD[1]   = 1;
-    if (holeA5[0] < MINTOUCH)    holeE[1]   = 0;
+    if (holeE[0] < MINTOUCH)    holeE[1]   = 0;
     else                      holeE[1]   = 1;
-    if (holeA6[0] < MINTOUCH)    holeF[1]   = 0;
+    if (holeF[0] < MINTOUCH)    holeF[1]   = 0;
     else                      holeF[1]   = 1;
-    if (holeA7[0] < MINTOUCH)    holeG[1]   = 0;
+    if (holeG[0] < MINTOUCH)    holeG[1]   = 0;
     else                      holeG[1]   = 1;
-    if (holeA8[0] < MINTOUCH)    holeA[1]   = 0;
+    if (holeA[0] < MINTOUCH)    holeA[1]   = 0;
     else                      holeA[1]   = 1;
-    if (holeA9[0] < MINTOUCH)    holeB[1]   = 0;
+    if (holeB[0] < MINTOUCH)    holeB[1]   = 0;
     else                      holeB[1]   = 1;
-    if (holeA10[0] < MINTOUCH)   holeCP[1]  = 0;
-    else                      holeACP[1]  = 1;
-/*  // 音量可调节
-    //currentVelocity = map(valueA0, 0, 1024, 0, 127);
-    int ec1 = map(valueA3, pmmin, pmmax, 0, 127);
-    //Serial.print("pm :");Serial.println(valueA3);
-    /*if(valueA1 < 1000){
-      controlChange(0, 7, ec1);
-    }
-*/
-
-/*  // 串口绘图器
-    Serial.print(holeA1[0]);Serial.print(',');
-    Serial.print(holeA2[0]);Serial.print(',');
-    Serial.print(holeC[0]);Serial.print(',');
-    Serial.print(holeD[0]);Serial.print(',');
-    Serial.print(holeE[0]);Serial.print(',');
-    Serial.print(holeF[0]);Serial.print(',');
-    Serial.print(holeG[0]);Serial.print(',');
-    Serial.print(holeA[0]);Serial.print(',');
-    Serial.print(holeB[0]);Serial.print(',');
-    Serial.print(holeCP[0]);Serial.print(',');
-*/ //}
+    if (holeCP[0] < MINTOUCH)   holeCP[1]  = 0;
+    else                      holeCP[1]  = 1;
 }
+  if(DEBUG){printValue();}
+}
+
+void printValue(){  // 串口绘图器
+  Serial.print(holeA1[0]);Serial.print(',');
+  Serial.print(holeA2[0]);Serial.print(',');
+  Serial.print(holeC[0]);Serial.print(',');
+  Serial.print(holeD[0]);Serial.print(',');
+  Serial.print(holeE[0]);Serial.print(',');
+  Serial.print(holeF[0]);Serial.print(',');
+  Serial.print(holeG[0]);Serial.print(',');
+  Serial.print(holeA[0]);Serial.print(',');
+  Serial.print(holeB[0]);Serial.print(',');
+  Serial.print(holeCP[0]);Serial.print(',');
+  Serial.print(0);Serial.print(',');
+  Serial.print(MINTOUCH);Serial.print(',');
+  Serial.println(1023);
+  }
 
 void holeHandle(int *holeAX){
   if(holeAX[2] != holeAX[1]){
@@ -117,35 +115,46 @@ void holeHandle(int *holeAX){
   //delay(20);
 }
 
-void scan(){
+int channelDebug(){// 调试channel, 调试得到drum channel是9，keyboard是0
   int a = digitalRead(channelPlus);
   int b = digitalRead(channelMinus);
-  if(a == 0){
+  int channel = 0;
+  if(a == 0){  // 加channel
     while(a == 0){a = digitalRead(channelPlus);}
     if(a == 1){
-        channel += 1;
-        if(channel > 15){
-            channel = 15;
-        }
+      channel += 1;
+      if(channel > 15){channel = 15;}
     }
   }
 
-  if(b == 0){
+  if(b == 0){  // 减channel
     while(b == 0){b = digitalRead(channelMinus);}
     if(b == 1){
         channel -= 1;
-        if(channel < 0){
-            channel = 0;
-        }
+        if(channel < 0){channel = 0;}
     }
   }
-  if((holeA1[1] + holeA2[1]) == 0) // A1和A2同时按下，升1个调
-    mod = 1;
-  else if (holeA1[1] == 0)  // 仅A1按下，升一个八度
-    mod = 12;
-  else                      // 仅A2按下，降低一个八度
-    mod = -12;
+  return channel;
+}
 
+int controlOctave(){// A1,A2控制，升高或降低音阶八度
+  if((holeA1[1] + holeA2[1]) == 0) // A1和A2同时按下，升1个调 transpose up
+    mod = 1;
+  else if (holeA1[1] == 0)  // 仅A1按下，升一个八度 octave up
+    mod = 12;
+  else if (holeA2[1] == 0)  // 仅A2按下，降低一个八度 octave down
+    mod = -12;
+  else
+    mod = 0;
+  return mod;
+}
+
+void scan(){
+ /*// 调试channel
+  channelDebug();
+ */
+  // A1 A2
+  mod = controlOctave();
   // C
   holeHandle(holeC);
   // D
@@ -167,10 +176,6 @@ void scan(){
 void loop() {
   readStatus();
   scan();
-
-  Serial.print(0);Serial.print(',');
-  Serial.print(MINTOUCH);Serial.print(',');
-  Serial.println(1023);
 }
 
 void noteOn(byte chn, byte pitch, byte velocity) {

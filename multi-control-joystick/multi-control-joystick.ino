@@ -1,14 +1,17 @@
 #include "Joystick.h"
 #include "keymap.h"
 
-#define DEBUG 0
-#define MAXJOYSTICK 923
-#define MINJOYSTICK 100
-#define MINTOUCH 938
-#define Y_AXIS 1
+#define DEBUG 0         // 打印调试信息
+#define JOYSTICK_SENSITIVITY 100 // 调节joystick灵敏度，范围 0 - 500
+#define MINTOUCH 938    // hole触摸输入的阈值
+#define Y_AXIS 1        // X/Y轴标记，joystickHandle中使用
 #define X_AXIS 0
-int caliXAxis      = -1;  // 取值1和-1，调换方向
-int caliYAxis      = -1;
+
+// joystick 转换到数字量的阈值，高于MAX，UP输入；低于MIN，DOWN输入
+int MAXJOYSTICK = 1023 -  JOYSTICK_SENSITIVITY;
+int MINJOYSTICK = 0 + JOYSTICK_SENSITIVITY;
+int caliXAxis      = -1;  // 调校X方向，取值1和-1
+int caliYAxis      = -1;  // 调校Y方向，取值1和-1
 int directionStep  = 127; // 0~127 摇杆移动步距
 int JOYSTICK_UP    = caliYAxis * directionStep;
 int JOYSTICK_LEFT  = caliXAxis * directionStep;
@@ -16,7 +19,7 @@ int JOYSTICK_DOWN  = -JOYSTICK_UP;
 int JOYSTICK_RIGHT = -JOYSTICK_LEFT;
 
 //==============================================
-// set pin numbers for the five buttons:
+// set pin numbers for the buttons:
 const int joystickXAxis    = A0;
 const int joystickYAxis    = A11;
 const int pinUp            = 16;
@@ -95,7 +98,7 @@ void setup() { // initialize the buttons' inputs:
   Joystick.begin();
 }
 
-void readStatus() {
+void readStatus() { // 读值，并转换成数字状态，存入这个键的数组中
   int valueXAxis      = analogRead(joystickXAxis);
   int valueYAxis      = analogRead(joystickYAxis);
   statusPinUp[0]      = digitalRead(pinUp);
@@ -160,7 +163,7 @@ void readStatus() {
   if(DEBUG){printValue();}
 }
 
-void printValue(){ // 串口绘图器
+void printValue(){ // 串口绘图器 Serial Plotter
   Serial.print(statusHoleUp[0]);Serial.print(',');
   Serial.print(statusHoleLeft[0]);Serial.print(',');
   Serial.print(statusHoleDown[0]);Serial.print(',');
@@ -183,7 +186,7 @@ void releaseHandle(int key) {
   Joystick.releaseButton(key);
 }
 
-void keyHandle(int *key){
+void keyHandle(int *key){ // 按键处理函数 Handle for Buttons
   if (key[1] != key[0]) {
     if (key[0] == 0)
       pressHandle(key[2]);
@@ -194,21 +197,21 @@ void keyHandle(int *key){
   delay(1);
 }
 
-// Handle for joystick
-void joystickHandle(int *key){
+
+void joystickHandle(int *key){ // Handle for joystick
   // key[0]是现在状态，key[1]是上一个状态，key[2]是键值，
   // key[3]是X/Y轴标记
   // key[0] == 0表示键位按下
-  if (key[1] != key[0]) {
+  if (key[1] != key[0]) { // 有状态变化时处理
     if (key[0] == 0){
-      if(key[3] == Y_AXIS){
+      if(key[3] == Y_AXIS){ // 根据key[3]来决定使用setYAxis还是setXAxis
         Joystick.setYAxis(key[2]);
        }
       else if(key[3] == X_AXIS){
         Joystick.setXAxis(key[2]);
        }
     }
-    else{
+    else{ // 没有方向输入时，joystick的数值回到0
       if(key[3] == Y_AXIS){
         Joystick.setYAxis(0);
        }
@@ -219,11 +222,9 @@ void joystickHandle(int *key){
     key[1] = key[0];
   }
   delay(1);
-  //Serial.print("key:");Serial.print(key[1]);Serial.print("  ");Serial.print(key[2]);Serial.print("  ");Serial.println(key[3]);
 }
 
-// Handle for Buttons
-void scan() {
+void scan() { // 扫描各按键
   // Buttons
   // UP
   joystickHandle(statusPinUp);

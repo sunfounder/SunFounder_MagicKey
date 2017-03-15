@@ -1,22 +1,13 @@
 #include "Keyboard.h"
 #include "keymap.h"
 
-#define DEBUG 1
-#define MAXJOYSTICK 923
-#define MINJOYSTICK 100
-#define MINTOUCH 938
-#define Y_AXIS 1
-#define X_AXIS 0
-int caliXAxis      = -1;  // 取值1和-1，调换方向
-int caliYAxis      = -1;
-int directionStep  = 127; // 0~127 摇杆移动步距
-int JOYSTICK_UP    = caliYAxis * directionStep;
-int JOYSTICK_LEFT  = caliXAxis * directionStep;
-int JOYSTICK_DOWN  = -JOYSTICK_UP;
-int JOYSTICK_RIGHT = -JOYSTICK_LEFT;
+#define DEBUG 0          // 打印调试信息
+#define MAXJOYSTICK 923  // 转换到数字量的阈值，
+#define MINJOYSTICK 100    // 高于MAX，UP输入；低于MIN，DOWN输入
+#define MINTOUCH 938     // hole触摸输入的阈值
 
 //==============================================
-// set pin numbers for the five buttons:
+// set pin numbers for the buttons:
 const int joystickXAxis    = A0;
 const int joystickYAxis    = A11;
 const int pinUp            = 16;
@@ -46,23 +37,24 @@ const int holeY            = A10;
 
 //==============================================
 // Set variables
-// key[0]是现在状态，key[1]是上一个状态，key[2]是键值，
-// key[3]是X/Y轴标记
+// key[0]是现在状态   statusAX
+// key[1]是上一个状态 lastStatusAX
+// key[2]是键值，     key value
 // key[0] == 0表示键位按下
 int statusSelcetor         = 0;
 
-int statusAxisUp[]         = {0, 0, KEYBOARD_UP,    Y_AXIS};
-int statusAxisDown[]       = {0, 0, KEYBOARD_DOWN,  Y_AXIS};
-int statusAxisLeft[]       = {0, 0, KEYBOARD_LEFT,  X_AXIS};
-int statusAxisRight[]      = {0, 0, KEYBOARD_RIGHT, X_AXIS};
-int statusPinUp[]          = {0, 0, KEYBOARD_UP,    Y_AXIS};
-int statusPinDown[]        = {0, 0, KEYBOARD_DOWN,  Y_AXIS};
-int statusPinLeft[]        = {0, 0, KEYBOARD_LEFT,  X_AXIS};
-int statusPinRight[]       = {0, 0, KEYBOARD_RIGHT, X_AXIS};
-int statusHoleUp[]         = {0, 0, KEYBOARD_UP,    Y_AXIS};
-int statusHoleDown[]       = {0, 0, KEYBOARD_DOWN,  Y_AXIS};
-int statusHoleLeft[]       = {0, 0, KEYBOARD_LEFT,  X_AXIS};
-int statusHoleRight[]      = {0, 0, KEYBOARD_RIGHT, X_AXIS};
+int statusAxisUp[]         = {0, 0, KEYBOARD_UP};
+int statusAxisDown[]       = {0, 0, KEYBOARD_DOWN};
+int statusAxisLeft[]       = {0, 0, KEYBOARD_LEFT};
+int statusAxisRight[]      = {0, 0, KEYBOARD_RIGHT};
+int statusPinUp[]          = {0, 0, KEYBOARD_UP};
+int statusPinDown[]        = {0, 0, KEYBOARD_DOWN};
+int statusPinLeft[]        = {0, 0, KEYBOARD_LEFT};
+int statusPinRight[]       = {0, 0, KEYBOARD_RIGHT};
+int statusHoleUp[]         = {0, 0, KEYBOARD_UP};
+int statusHoleDown[]       = {0, 0, KEYBOARD_DOWN};
+int statusHoleLeft[]       = {0, 0, KEYBOARD_LEFT};
+int statusHoleRight[]      = {0, 0, KEYBOARD_RIGHT};
 
 int statusPinA[]           = {0, 0, KEYBOARD_A};
 int statusPinB[]           = {0, 0, KEYBOARD_B};
@@ -95,7 +87,7 @@ void setup() { // initialize the buttons' inputs:
   Keyboard.begin();
 }
 
-void readStatus() {
+void readStatus() { // 读值，并转换成数字状态，存入这个键的数组中
   int valueXAxis      = analogRead(joystickXAxis);
   int valueYAxis      = analogRead(joystickYAxis);
   statusPinUp[0]      = digitalRead(pinUp);
@@ -160,7 +152,7 @@ void readStatus() {
   if(DEBUG){printValue();}
 }
 
-void printValue(){ // 串口绘图器
+void printValue(){ // 串口绘图器 Serial Plotter
   Serial.print(statusHoleUp[0]);Serial.print(',');
   Serial.print(statusHoleLeft[0]);Serial.print(',');
   Serial.print(statusHoleDown[0]);Serial.print(',');
@@ -174,22 +166,16 @@ void printValue(){ // 串口绘图器
   Serial.print(MINTOUCH);Serial.print(',');
 }
 
-// Handle press command
-void pressHandle(int key) {
-  //Serial.println("press");
+void pressHandle(int key) { // Handle press command
   Keyboard.press(key);
 }
-// Handle release command
-void releaseHandle(int key) {
-  //Serial.println("release");
+
+void releaseHandle(int key) { // Handle release command
   Keyboard.release(key);
 }
 
-void keyHandle(int *key){
-  // key[0]是现在状态，key[1]是上一个状态，key[2]是键值，
-  // key[3]是X/Y轴标记
-  // key[0] == 0表示键位按下
-  if (key[1] != key[0]) {
+void keyHandle(int *key){ // 按键处理函数 Handle for Buttons
+  if (key[1] != key[0]) {  // Status状态有变化才处理
     if (key[0] == 0)
       pressHandle(key[2]);
     else
@@ -199,8 +185,7 @@ void keyHandle(int *key){
   delay(1);
 }
 
-// Handle for Buttons
-void scan() {
+void scan() { // 扫描各按键
   // Buttons
   // UP
   keyHandle(statusPinUp);

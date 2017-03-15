@@ -1,10 +1,10 @@
 #include "MIDIUSB.h"
 #include "notemap.h"
 
-#define DEBUG 1
-#define MINTOUCH 900
-#define CHANNEL_KEYBOARD 0  // CHANNEL
-#define CHANNEL_DRUM 9      // CHANNEL
+#define DEBUG 0             // 打印调试信息
+#define MINTOUCH 900        // hole触摸输入的阈值
+#define CHANNEL_KEYBOARD 0  // 使用keyboard的CHANNEL
+#define CHANNEL_DRUM 9      // 使用drum的CHANNEL
 #define CONTROL_VOLUME  7   // 控制种类,7表示更改channel值 Continuous Controllers
 // 更多midi控制参数 http://nickfever.com/music/midi-cc-list
 
@@ -12,9 +12,9 @@ int currentVelocity = 127;  // 音符力度0~127 Velocity parameter
 
 int mod = 0;                // 音阶升降参数 Octave parameter
 
-int channel = CHANNEL_KEYBOARD;
+int channel = CHANNEL_KEYBOARD;  // 此处更改乐器，另外还需要更改.h头文件中的note map
 
-const int selector         = 7;
+const int selector         = 7;  // 拨动开关
 const int channelPlus      = 3;  // pin A
 const int channelMinus     = 2;  // pin B
 int statusSelcetor         = 0;
@@ -23,7 +23,7 @@ int statusSelcetor         = 0;
 // holeAX[0] 直接读取到的模拟值    valueAX
 // holeAX[1] 模拟值转成数字量      statusAX
 // holeAX[2] 读值有改变才进行输出  lastStatusAX
-// holeAX[3] note map              NOTE_A4
+// holeAX[3] note map              NOTE_AX
 // holeAX[4] lastNoteAX, 变调的值  lastNoteAX
 int holeA1[] = {0, 0, 0, 0};
 int holeA2[] = {0, 0, 0, 0};
@@ -42,10 +42,10 @@ void setup() {
   Serial.begin(115200);
   pinMode(channelPlus, INPUT_PULLUP);
   pinMode(channelMinus, INPUT_PULLUP);
-  controlChange(channel, CONTROL_VOLUME, 127); // 切换channel
+  controlChange(channel, CONTROL_VOLUME, 127); // setup channel
 }
 
-void readStatus(){
+void readStatus(){   // 读模拟值，转换成数字状态存入holeX[1]
   statusSelcetor = digitalRead(selector);
   if(statusSelcetor == 0){    // hole 开关
     holeA1[0]  = analogRead(A1);
@@ -83,7 +83,7 @@ void readStatus(){
   if(DEBUG){printValue();}
 }
 
-void printValue(){  // 串口绘图器
+void printValue(){  // 串口绘图器 Serial Plotter
   Serial.print(holeA1[0]);Serial.print(',');
   Serial.print(holeA2[0]);Serial.print(',');
   Serial.print(holeC[0]);Serial.print(',');
@@ -99,14 +99,14 @@ void printValue(){  // 串口绘图器
   Serial.println(1023);
   }
 
-void holeHandle(int *holeAX){
-  if(holeAX[2] != holeAX[1]){
-    if(holeAX[1] == 0){
+void holeHandle(int *holeAX){  // hole 按键处理函数
+  if(holeAX[2] != holeAX[1]){  // Status状态有变化
+    if(holeAX[1] == 0){   // 按键按下，发声
       noteOn(channel, (holeAX[3] + mod), currentVelocity);
       holeAX[4] = holeAX[3] + mod;
       Serial.print("noteOn  ");Serial.println(holeAX[3] + mod);
     }
-    else{
+    else{  // 没有按键按下，熄声
       noteOff(channel, holeAX[4], currentVelocity);
       Serial.print("      noteOff  ");Serial.println(holeAX[4]);
     }
@@ -115,7 +115,9 @@ void holeHandle(int *holeAX){
   //delay(20);
 }
 
-int channelDebug(){// 调试channel, 调试得到drum channel是9，keyboard是0
+int channelDebug(){// 调试channel
+  // 按一次A，channnel加一，按一次B，channel减1
+  // 调试得到keyboard channel是0，drum channel是9
   int a = digitalRead(channelPlus);
   int b = digitalRead(channelMinus);
   int channel = 0;
@@ -149,7 +151,7 @@ int controlOctave(){// A1,A2控制，升高或降低音阶八度
   return mod;
 }
 
-void scan(){
+void scan(){ // 扫描各按键
  /*// 调试channel
   channelDebug();
  */
@@ -178,6 +180,11 @@ void loop() {
   scan();
 }
 
+// First parameter is the event type (0x09 = note on, 0x08 = note off).
+// Second parameter is note-on/note-off, combined with the channel.
+// Channel can be anything between 0-15. Typically reported to the user as 1-16.
+// Third parameter is the note number (48 = middle C).
+// Fourth parameter is the velocity (64 = normal, 127 = fastest).
 void noteOn(byte chn, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = {0x09, 0x90 | chn, pitch, velocity};
   MidiUSB.sendMIDI(noteOn);

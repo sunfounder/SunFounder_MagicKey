@@ -1,23 +1,38 @@
+/**********************************************************************
+* Filename    : multi-control-midi.ino
+* Description : SunFounder multi-control midi device 驱动
+* Author      : Dream
+* Brand       : SunFounder
+* E-mail      : service@sunfounder.com
+* Website     : www.sunfounder.com
+* Update      : V1.0.0    2017-3-15
+*
+*
+* 此代码适用与SunFounder multi-control产品，用于产品模拟midi设备功能。
+* 1.A1,A2音阶控制：仅A1按下，升一个八度 octave up;仅A2按下，降低一个八度 octave down;
+*                1和A2同时按下，升1个调 transpose up
+* 2.A3-A10音调：对应C5,D5,E5,F5,G5,A5,B5,C6音调(keyboard模式)
+* 3.目前支持piano和drum乐器，注释掉#define KEYBOARD，取消//#define DRUM注释，则切换为DRUM模式
+*
+* 轻DIY：
+*     DEBUG    等于1时，打印调试信息
+*     MINTOUCH 900      hole触摸输入的灵敏度(0-1023),越大越容易触发
+*     头文件 notemap.h 中，可以更改每个按键对应的midi音调值和Velocity parameter。
+**********************************************************************/
+#define KEYBOARD         // uncomment to use piano keboard
+//#define DRUM               // uncomment to use drum
 #include "MIDIUSB.h"
 #include "notemap.h"
 
-#define DEBUG 0             // 打印调试信息
-#define MINTOUCH 900        // hole触摸输入的阈值
-#define CHANNEL_KEYBOARD 0  // 使用keyboard的CHANNEL
-#define CHANNEL_DRUM 9      // 使用drum的CHANNEL
-#define CONTROL_VOLUME  7   // 控制种类,7表示更改channel值 Continuous Controllers
-// 更多midi控制参数 http://nickfever.com/music/midi-cc-list
-
-int currentVelocity = 127;  // 音符力度0~127 Velocity parameter
+#define DEBUG 0             // 等于1时，打印调试信息
+#define MINTOUCH 900        // hole触摸输入的灵敏度(0-1023),越大越容易触发
 
 int mod = 0;                // 音阶升降参数 Octave parameter
 
-int channel = CHANNEL_KEYBOARD;  // 此处更改乐器，另外还需要更改.h头文件中的note map
-
-const int selector         = 7;  // 拨动开关
-const int channelPlus      = 3;  // pin A
-const int channelMinus     = 2;  // pin B
-int statusSelcetor         = 0;
+const int Mode             = 7;  // 拨动开关，开关hole触摸输入
+const int channelPlus      = 3;  // 按键A，仅用于调试channel功能
+const int channelMinus     = 2;  // 按键B，仅用于调试channel功能
+int statusMode             = 0;
 //==============================================
 // Set variables
 // holeAX[0] 直接读取到的模拟值    valueAX
@@ -46,8 +61,8 @@ void setup() {
 }
 
 void readStatus(){   // 读模拟值，转换成数字状态存入holeX[1]
-  statusSelcetor = digitalRead(selector);
-  if(statusSelcetor == 0){    // hole 开关
+  statusMode = digitalRead(Mode);
+  if(statusMode == 0){    // hole 开关
     holeA1[0]  = analogRead(A1);
     holeA2[0]  = analogRead(A2);
     holeC[0]   = analogRead(A3);

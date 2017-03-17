@@ -1,10 +1,33 @@
+/**********************************************************************
+* Filename    : multi-control-keyboard.ino
+* Description : SunFounder multi-control keyboard 驱动
+* Author      : Dream
+* Brand       : SunFounder
+* E-mail      : service@sunfounder.com
+* Website     : www.sunfounder.com
+* Update      : V1.0.0    2017-3-15
+*
+*
+* 此代码适用与SunFounder multi-control产品，用于产品模拟keyboard功能。
+* 1.joystick 映射为键盘方向键
+*   A->left ctrl, B->left alt, X->字母Z, Y->字母X，
+*   SELECT->SPACE, START->ENTER
+* 轻DIY：
+*     DEBUG    等于1时，打印调试信息
+*     JOYSTICK_SENSITIVITY 100  调节joystick灵敏度，范围 0 - 500
+*     MINTOUCH 938      hole触摸输入的灵敏度(0-1023),越大越容易触发
+*     头文件 keymap.h 中，可以更改每个按键对应的键盘映射。
+**********************************************************************/
 #include "Keyboard.h"
 #include "keymap.h"
 
-#define DEBUG 0          // 打印调试信息
-#define MAXJOYSTICK 923  // 转换到数字量的阈值，
-#define MINJOYSTICK 100    // 高于MAX，UP输入；低于MIN，DOWN输入
-#define MINTOUCH 938     // hole触摸输入的阈值
+#define DEBUG 0          // 等于1时，打印调试信息
+#define JOYSTICK_SENSITIVITY 100 // 调节joystick灵敏度，范围 0 - 500
+#define MINTOUCH 938     // hole触摸输入的灵敏度(0-1023),越大越容易触发
+
+// joystick 转换到数字量 的阈值，高于MAX，UP输入；低于MIN，DOWN输入
+int MAXJOYSTICK = 1023 - JOYSTICK_SENSITIVITY;
+int MINJOYSTICK = 0 + JOYSTICK_SENSITIVITY;
 
 //==============================================
 // set pin numbers for the buttons:
@@ -70,7 +93,8 @@ int statusHoleStart[]      = {0, 0, KEYBOARD_START};
 int statusHoleSelect[]     = {0, 0, KEYBOARD_SELECT};
 //==============================================
 
-void setup() { // initialize the buttons' inputs:
+// initialize the buttons' inputs:
+void setup() {
   pinMode(pinUp,        INPUT_PULLUP);
   pinMode(pinLeft,      INPUT_PULLUP);
   pinMode(pinDown,      INPUT_PULLUP);
@@ -87,7 +111,8 @@ void setup() { // initialize the buttons' inputs:
   Keyboard.begin();
 }
 
-void readStatus() { // 读值，并转换成数字状态，存入这个键的数组中
+// 读值，并转换成数字状态，存入这个键的数组中
+void readStatus() {
   int valueXAxis      = analogRead(joystickXAxis);
   int valueYAxis      = analogRead(joystickYAxis);
   statusPinUp[0]      = digitalRead(pinUp);
@@ -152,7 +177,8 @@ void readStatus() { // 读值，并转换成数字状态，存入这个键的数
   if(DEBUG){printValue();}
 }
 
-void printValue(){ // 串口绘图器 Serial Plotter
+// 串口绘图器 Serial Plotter
+void printValue(){
   Serial.print(statusHoleUp[0]);Serial.print(',');
   Serial.print(statusHoleLeft[0]);Serial.print(',');
   Serial.print(statusHoleDown[0]);Serial.print(',');
@@ -166,15 +192,18 @@ void printValue(){ // 串口绘图器 Serial Plotter
   Serial.print(MINTOUCH);Serial.print(',');
 }
 
-void pressHandle(int key) { // Handle press command
+// Handle press command
+void pressHandle(int key) {
   Keyboard.press(key);
 }
 
-void releaseHandle(int key) { // Handle release command
+// Handle release command
+void releaseHandle(int key) {
   Keyboard.release(key);
 }
 
-void keyHandle(int *key){ // 按键处理函数 Handle for Buttons
+// 按键处理函数 Handle for Buttons
+void keyHandle(int *key){
   if (key[1] != key[0]) {  // Status状态有变化才处理
     if (key[0] == 0)
       pressHandle(key[2]);
@@ -185,7 +214,8 @@ void keyHandle(int *key){ // 按键处理函数 Handle for Buttons
   delay(1);
 }
 
-void scan() { // 扫描各按键
+// 扫描各按键
+void scan() {
   // Buttons
   // UP
   keyHandle(statusPinUp);

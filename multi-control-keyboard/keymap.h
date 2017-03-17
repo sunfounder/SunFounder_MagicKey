@@ -2,6 +2,7 @@
 
 #define KEY_SPACE       0x20
 
+// 想要自定义键位映射，修改等号右边的值，可修改的键位参见list
 // KEYBOARD_MODE
 int KEYBOARD_UP     = KEY_UP_ARROW;
 int KEYBOARD_DOWN   = KEY_DOWN_ARROW;

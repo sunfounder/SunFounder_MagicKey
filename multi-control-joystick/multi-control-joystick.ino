@@ -1,15 +1,36 @@
+/**********************************************************************
+* Filename    : multi-control-joystick.ino
+* Description : SunFounder multi-control joystick 驱动
+* Author      : Dream
+* Brand       : SunFounder
+* E-mail      : service@sunfounder.com
+* Website     : www.sunfounder.com
+* Update      : V1.0.0    2017-3-15
+*
+*
+* 此代码适用与SunFounder multi-control产品，用于产品模拟keyboard功能。
+* 1.支持joystick
+* 2.支持buttons A, B, X, Y, START, SELECT
+* 可编辑：
+*     DEBUG    等于1时，打印调试信息
+*     JOYSTICK_SENSITIVITY 100  调节joystick灵敏度，范围 0 - 500
+*     MINTOUCH 938      hole触摸输入的灵敏度(0-1023),越大越容易触发
+*     头文件 keymap.h 中，可以更改每个按键对应的键盘映射。
+*     若X/Y轴方向相反，更改caliXAxis，caliYAxis
+**********************************************************************/
 #include "Joystick.h"
 #include "keymap.h"
 
-#define DEBUG 0         // 打印调试信息
+#define DEBUG 0         // 等于1时，打印调试信息
 #define JOYSTICK_SENSITIVITY 100 // 调节joystick灵敏度，范围 0 - 500
-#define MINTOUCH 938    // hole触摸输入的阈值
+#define MINTOUCH 938    // hole触摸输入的灵敏度(0-1023),越大越容易触发
 #define Y_AXIS 1        // X/Y轴标记，joystickHandle中使用
 #define X_AXIS 0
 
 // joystick 转换到数字量的阈值，高于MAX，UP输入；低于MIN，DOWN输入
-int MAXJOYSTICK = 1023 -  JOYSTICK_SENSITIVITY;
+int MAXJOYSTICK = 1023 - JOYSTICK_SENSITIVITY;
 int MINJOYSTICK = 0 + JOYSTICK_SENSITIVITY;
+
 int caliXAxis      = -1;  // 调校X方向，取值1和-1
 int caliYAxis      = -1;  // 调校Y方向，取值1和-1
 int directionStep  = 127; // 0~127 摇杆移动步距
@@ -32,7 +53,7 @@ const int pinX             = 11;
 const int pinY             = 5;
 const int pinStart         = 0;
 const int pinSelect        = 1;
-const int selector         = 7;
+const int Mode             = 7;
 
 // analog clip hole:
 const int holeUp           = A1;
@@ -49,10 +70,10 @@ const int holeY            = A10;
 
 //==============================================
 // Set variables
-// key[0]是现在状态，key[1]是上一个状态，key[2]是键值，
-// key[3]是X/Y轴标记
-// key[0] == 0表示键位按下
-int statusSelcetor         = 0;
+// statusXX[0]是现在状态,statusXX[1]是上一个状态,statusXX[2]是键值，
+// statusXX[3]是X/Y轴标记
+// statusXX[0] == 0表示键位按下
+int statusMode             = 0;
 
 int statusAxisUp[]         = {0, 0, JOYSTICK_UP,    Y_AXIS};
 int statusAxisDown[]       = {0, 0, JOYSTICK_DOWN,  Y_AXIS};
@@ -81,7 +102,8 @@ int statusHoleStart[]      = {0, 0, JOYSTICK_START};
 int statusHoleSelect[]     = {0, 0, JOYSTICK_SELECT};
 //==============================================
 
-void setup() { // initialize the buttons' inputs:
+// initialize the buttons' inputs:
+void setup() {
   pinMode(pinUp,        INPUT_PULLUP);
   pinMode(pinLeft,      INPUT_PULLUP);
   pinMode(pinDown,      INPUT_PULLUP);
@@ -98,7 +120,8 @@ void setup() { // initialize the buttons' inputs:
   Joystick.begin();
 }
 
-void readStatus() { // 读值，并转换成数字状态，存入这个键的数组中
+// 读值，并转换成数字状态，存入这个键的数组中
+void readStatus() {
   int valueXAxis      = analogRead(joystickXAxis);
   int valueYAxis      = analogRead(joystickYAxis);
   statusPinUp[0]      = digitalRead(pinUp);
@@ -163,7 +186,8 @@ void readStatus() { // 读值，并转换成数字状态，存入这个键的数
   if(DEBUG){printValue();}
 }
 
-void printValue(){ // 串口绘图器 Serial Plotter
+// 串口绘图器 Serial Plotter
+void printValue(){
   Serial.print(statusHoleUp[0]);Serial.print(',');
   Serial.print(statusHoleLeft[0]);Serial.print(',');
   Serial.print(statusHoleDown[0]);Serial.print(',');
@@ -186,7 +210,8 @@ void releaseHandle(int key) {
   Joystick.releaseButton(key);
 }
 
-void keyHandle(int *key){ // 按键处理函数 Handle for Buttons
+// 按键处理函数 Handle for Buttons
+void keyHandle(int *key){
   if (key[1] != key[0]) {
     if (key[0] == 0)
       pressHandle(key[2]);
@@ -197,8 +222,8 @@ void keyHandle(int *key){ // 按键处理函数 Handle for Buttons
   delay(1);
 }
 
-
-void joystickHandle(int *key){ // Handle for joystick
+// Handle for joystick
+void joystickHandle(int *key){
   // key[0]是现在状态，key[1]是上一个状态，key[2]是键值，
   // key[3]是X/Y轴标记
   // key[0] == 0表示键位按下
@@ -224,7 +249,8 @@ void joystickHandle(int *key){ // Handle for joystick
   delay(1);
 }
 
-void scan() { // 扫描各按键
+// 扫描各按键
+void scan() {
   // Buttons
   // UP
   joystickHandle(statusPinUp);

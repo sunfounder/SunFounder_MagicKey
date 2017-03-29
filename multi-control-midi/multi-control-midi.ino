@@ -1,6 +1,6 @@
 /**********************************************************************
 * Filename    : multi-control-midi.ino
-* Description : SunFounder multi-control midi device 驱动
+* Description : SunFounder multi-control midi device driver
 * Author      : Dream
 * Brand       : SunFounder
 * E-mail      : service@sunfounder.com
@@ -8,38 +8,38 @@
 * Update      : V1.0.0    2017-3-15
 *
 *
-* 此代码适用与SunFounder multi-control产品，用于产品模拟midi设备功能。
-* 1.A1,A2音阶控制：仅A1按下，升一个八度 octave up;仅A2按下，降低一个八度 octave down;
-*                1和A2同时按下，升1个调 transpose up
-* 2.A3-A10音调：对应C5,D5,E5,F5,G5,A5,B5,C6音调(keyboard模式)
-* 3.目前支持piano和drum乐器，注释掉#define KEYBOARD，取消//#define DRUM注释，则切换为DRUM模式
+* This code fits SunFounder multi-control product，which is used to simulate midi device functions.
+* 1.A1,A2 for scale adjustment：A1 conducts, shift to an octave up; A2 conducts, shift to an octave down;
+*                               A1 & A2 all conduct, shift to an transpose up.
+* 2.A3-A10 for tones：corresponds to tone C5, D5, E5, F5, G5, A5, B5, C6(in piano keyboard mode).
+* 3.Piano and drum supporting，comment out #define KEYBOARD，and uncomment //#define DRUM to shift to DRUM mode.
 *
-* 轻DIY：
-*     DEBUG    等于1时，打印调试信息
-*     MINTOUCH 900      hole触摸输入的灵敏度(0-1023),越大越容易触发
-*     头文件 notemap.h 中，可以更改每个按键对应的midi音调值和Velocity parameter。
+* easy-to-do DIY：
+*     DEBUG    When it is 1, it will print the debugging information.
+*     MINTOUCH 900      sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be.
+*     In header file notemap.h, you can modify the holes' midi tones and velocity parameter mapping.
 **********************************************************************/
-#define KEYBOARD         // uncomment to use piano keboard
-//#define DRUM               // uncomment to use drum
+#define KEYBOARD         // uncomment to shift to piano keboard mode
+//#define DRUM               // uncomment to shift to drum mode
 #include "MIDIUSB.h"
 #include "notemap.h"
 
-#define DEBUG 0             // 等于1时，打印调试信息
-#define MINTOUCH 900        // hole触摸输入的灵敏度(0-1023),越大越容易触发
+#define DEBUG 0             // When it is 1, it will print the debugging information
+#define MINTOUCH 900        // sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be
 
-int mod = 0;                // 音阶升降参数 Octave parameter
+int mod = 0;                // for scale adjustment, Octave parameter
 
-const int Mode             = 7;  // 拨动开关，开关hole触摸输入
-const int channelPlus      = 3;  // 按键A，仅用于调试channel功能
-const int channelMinus     = 2;  // 按键B，仅用于调试channel功能
+const int Mode             = 7;  // Switch, to turn on/off the touching holes
+const int channelPlus      = 3;  // button A, used to configure channel function
+const int channelMinus     = 2;  // button B, used to configure channel function
 int statusMode             = 0;
 //==============================================
 // Set variables
-// holeAX[0] 直接读取到的模拟值    valueAX
-// holeAX[1] 模拟值转成数字量      statusAX
-// holeAX[2] 读值有改变才进行输出  lastStatusAX
-// holeAX[3] note map              NOTE_AX
-// holeAX[4] lastNoteAX, 变调的值  lastNoteAX
+// holeAX[0] the analog value to be read            valueAX
+// holeAX[1] analog to digital one                  statusAX
+// holeAX[2] output the value only when it changes  lastStatusAX
+// holeAX[3] note map                               NOTE_AX
+// holeAX[4] lastNoteAX, value of modified tone     lastNoteAX
 int holeA1[] = {0, 0, 0, 0};
 int holeA2[] = {0, 0, 0, 0};
 int holeC[]  = {0, 0, 0, NOTE_C, 0};
@@ -60,9 +60,9 @@ void setup() {
   controlChange(channel, CONTROL_VOLUME, 127); // setup channel
 }
 
-void readStatus(){   // 读模拟值，转换成数字状态存入holeX[1]
+void readStatus(){   // read the analog, and shift to digital one to store in array holeX[1]
   statusMode = digitalRead(Mode);
-  if(statusMode == 0){    // hole 开关
+  if(statusMode == 0){    // hole switch
     holeA1[0]  = analogRead(A1);
     holeA2[0]  = analogRead(A2);
     holeC[0]   = analogRead(A3);
@@ -98,7 +98,7 @@ void readStatus(){   // 读模拟值，转换成数字状态存入holeX[1]
   if(DEBUG){printValue();}
 }
 
-void printValue(){  // 串口绘图器 Serial Plotter
+void printValue(){  // Serial Plotter
   Serial.print(holeA1[0]);Serial.print(',');
   Serial.print(holeA2[0]);Serial.print(',');
   Serial.print(holeC[0]);Serial.print(',');
@@ -114,14 +114,14 @@ void printValue(){  // 串口绘图器 Serial Plotter
   Serial.println(1023);
   }
 
-void holeHandle(int *holeAX){  // hole 按键处理函数
-  if(holeAX[2] != holeAX[1]){  // Status状态有变化
-    if(holeAX[1] == 0){   // 按键按下，发声
+void holeHandle(int *holeAX){  // handle for hole function
+  if(holeAX[2] != holeAX[1]){  // Status change
+    if(holeAX[1] == 0){   // one hole conducts, produce corresponding sound
       noteOn(channel, (holeAX[3] + mod), currentVelocity);
       holeAX[4] = holeAX[3] + mod;
       Serial.print("noteOn  ");Serial.println(holeAX[3] + mod);
     }
-    else{  // 没有按键按下，熄声
+    else{  // hole conducts, no sound is produced
       noteOff(channel, holeAX[4], currentVelocity);
       Serial.print("      noteOff  ");Serial.println(holeAX[4]);
     }
@@ -130,13 +130,13 @@ void holeHandle(int *holeAX){  // hole 按键处理函数
   //delay(20);
 }
 
-int channelDebug(){// 调试channel
-  // 按一次A，channnel加一，按一次B，channel减1
-  // 调试得到keyboard channel是0，drum channel是9
+int channelDebug(){// configure channel
+  // press A once, add 1 to channel value, press B once, take 1 from channel value
+  // after configuration, we know keyboard channel is 0, drum channel is 9.
   int a = digitalRead(channelPlus);
   int b = digitalRead(channelMinus);
   int channel = 0;
-  if(a == 0){  // 加channel
+  if(a == 0){  // add to channel
     while(a == 0){a = digitalRead(channelPlus);}
     if(a == 1){
       channel += 1;
@@ -144,7 +144,7 @@ int channelDebug(){// 调试channel
     }
   }
 
-  if(b == 0){  // 减channel
+  if(b == 0){  // take from channel
     while(b == 0){b = digitalRead(channelMinus);}
     if(b == 1){
         channel -= 1;
@@ -154,20 +154,20 @@ int channelDebug(){// 调试channel
   return channel;
 }
 
-int controlOctave(){// A1,A2控制，升高或降低音阶八度
-  if((holeA1[1] + holeA2[1]) == 0) // A1和A2同时按下，升1个调 transpose up
+int controlOctave(){// A1,A2 is control scale adjustment
+  if((holeA1[1] + holeA2[1]) == 0) // A1 and A2 conduct, shift to an transpose up
     mod = 1;
-  else if (holeA1[1] == 0)  // 仅A1按下，升一个八度 octave up
+  else if (holeA1[1] == 0)  // A1 conducts, shift to an octave up
     mod = 12;
-  else if (holeA2[1] == 0)  // 仅A2按下，降低一个八度 octave down
+  else if (holeA2[1] == 0)  // A2 conducts, shift to an octave down
     mod = -12;
   else
     mod = 0;
   return mod;
 }
 
-void scan(){ // 扫描各按键
- /*// 调试channel
+void scan(){ // scan all the buttons status
+ /*// configure channel
   channelDebug();
  */
   // A1 A2

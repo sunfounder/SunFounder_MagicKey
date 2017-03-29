@@ -1,6 +1,6 @@
 /**********************************************************************
 * Filename    : multi-control-keyboard.ino
-* Description : SunFounder multi-control keyboard 驱动
+* Description : SunFounder multi-control keyboard driver
 * Author      : Dream
 * Brand       : SunFounder
 * E-mail      : service@sunfounder.com
@@ -8,24 +8,24 @@
 * Update      : V1.0.0    2017-3-15
 *
 *
-* 此代码适用与SunFounder multi-control产品，用于产品模拟keyboard功能。
-* 1.joystick 映射为键盘方向键
-*   A->left ctrl, B->left alt, X->字母Z, Y->字母X，
+* This code fits SunFounder multi-control product，which is used to simulate PC keyboard functions.
+* 1.joystick is mapped to the keyboard key
+*   A->left ctrl, B->left alt, X-> key Z, Y->key X，
 *   SELECT->SPACE, START->ENTER
-* 轻DIY：
-*     DEBUG    等于1时，打印调试信息
-*     JOYSTICK_SENSITIVITY 100  调节joystick灵敏度，范围 0 - 500
-*     MINTOUCH 938      hole触摸输入的灵敏度(0-1023),越大越容易触发
-*     头文件 keymap.h 中，可以更改每个按键对应的键盘映射。
+* easy-to-do DIY：
+*     DEBUG    When it is 1, it will print the debugging information.
+*     JOYSTICK_SENSITIVITY 100   adjust the sensitivity of joystick, ranging 0-500
+*     MINTOUCH 938      sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be.
+*     In header file keymap.h, you can modify the holes' keyboard mapping
 **********************************************************************/
 #include "Keyboard.h"
 #include "keymap.h"
 
-#define DEBUG 0          // 等于1时，打印调试信息
-#define JOYSTICK_SENSITIVITY 100 // 调节joystick灵敏度，范围 0 - 500
-#define MINTOUCH 938     // hole触摸输入的灵敏度(0-1023),越大越容易触发
+#define DEBUG 0          // When it is 1, it will print the debugging information.
+#define JOYSTICK_SENSITIVITY 100 // adjust the sensitivity of joystick, ranging 0-500
+#define MINTOUCH 938     // sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be.
 
-// joystick 转换到数字量 的阈值，高于MAX，UP输入；低于MIN，DOWN输入
+// threshold of the joystick to shift to digital value, if larger than MAX, UP input; if smaller than MAX, DOWN input.
 int MAXJOYSTICK = 1023 - JOYSTICK_SENSITIVITY;
 int MINJOYSTICK = 0 + JOYSTICK_SENSITIVITY;
 
@@ -60,10 +60,10 @@ const int holeY            = A10;
 
 //==============================================
 // Set variables
-// key[0]是现在状态   statusAX
-// key[1]是上一个状态 lastStatusAX
-// key[2]是键值，     key value
-// key[0] == 0表示键位按下
+// key[0] is the present status   statusAX
+// key[1] is the previous status lastStatusAX
+// key[2] is the key value     key value
+// key[0] == 0 means the corresponding buttons is activated
 int statusSelcetor         = 0;
 
 int statusAxisUp[]         = {0, 0, KEYBOARD_UP};
@@ -111,7 +111,7 @@ void setup() {
   Keyboard.begin();
 }
 
-// 读值，并转换成数字状态，存入这个键的数组中
+// read the analog, and shift to digital one to store in array
 void readStatus() {
   int valueXAxis      = analogRead(joystickXAxis);
   int valueYAxis      = analogRead(joystickYAxis);
@@ -177,7 +177,7 @@ void readStatus() {
   if(DEBUG){printValue();}
 }
 
-// 串口绘图器 Serial Plotter
+// Serial Plotter
 void printValue(){
   Serial.print(statusHoleUp[0]);Serial.print(',');
   Serial.print(statusHoleLeft[0]);Serial.print(',');
@@ -202,9 +202,9 @@ void releaseHandle(int key) {
   Keyboard.release(key);
 }
 
-// 按键处理函数 Handle for Buttons
+// Handle for Buttons functions
 void keyHandle(int *key){
-  if (key[1] != key[0]) {  // Status状态有变化才处理
+  if (key[1] != key[0]) {  // handle it when its status changes
     if (key[0] == 0)
       pressHandle(key[2]);
     else
@@ -214,7 +214,7 @@ void keyHandle(int *key){
   delay(1);
 }
 
-// 扫描各按键
+// Scan all the buttons status
 void scan() {
   // Buttons
   // UP

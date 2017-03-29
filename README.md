@@ -5,19 +5,17 @@ Quick Links:
 
  * [About SunFounder Multi Control](#about_this_{thing})
  * [Update](#update)
- * [Trouble Shootings](#trouble)
-    * [目前暂无](#error1)
  * [About SunFounder](#about_sunfounder)
  * [License](#license)
  * [Contact us](#contact_us)
 
 <a id="about_this_{thing}"></a>
 ### About SunFounder Multi Control:
-SunFounder Multi Control是一款基于atmel mega32U4的多功能控制器。使用mini USB接口，可直接连接pc或树莓派。
-SunFounder Multi Control可以实现模拟joystick手柄，midi输入设备，以及keyboard。
-其中joystick模式，使用方法与传统游戏手柄相同，非常适合retroPi的使用；
-midi模式，使用时配合鳄鱼夹，其中一只夹子夹在GND hole，并与操作者相连，另外的holes，通过夹子连接到导体上，使用者通过触摸导体，进行midi的输入；
-keyboard模式，每个实体按键映射一个键盘键位，可以通过自定义来修改键位映射。
+SunFounder Multi Control is a multi control based on atmel mega32U4. With the mini USB port, you can connect it to the PC or Raspberrry Pi to use.
+SunFounder Multi Control can be used to simulate gamepad handle，midi device，and PC keyboard.
+In gamepad mode, the buttons display is almost the same with the gamepad, so it is quite suitable for retroPie games.
+In midi mode, clip GND hole to the operator with the alligator clip and cable, while other holes to some conductive objects. Thus it can realize the midi input when the operator touches the conductive objects.
+In PC keyboard mode, all the connected conductive objects are mapped to the keyboard keys, you can customize the button's mapping.
 
 <a id="update"></a>
 ### Update:
@@ -25,10 +23,6 @@ keyboard模式，每个实体按键映射一个键盘键位，可以通过自定
 2017-03-15:
  - v1.0.0
 
-<a id="trouble"></a>
-###Trouble Shootings:
-<a id="error1"></a>
-目前暂无
 ----------------------------------------------
 <a id="about_sunfounder"></a>
 ### About SunFounder

@@ -1,6 +1,6 @@
 /**********************************************************************
 * Filename    : multi-control-joystick.ino
-* Description : SunFounder multi-control joystick 驱动
+* Description : SunFounder multi-control joystick driver
 * Author      : Dream
 * Brand       : SunFounder
 * E-mail      : service@sunfounder.com
@@ -8,32 +8,32 @@
 * Update      : V1.0.0    2017-3-15
 *
 *
-* 此代码适用与SunFounder multi-control产品，用于产品模拟keyboard功能。
-* 1.支持joystick
-* 2.支持buttons A, B, X, Y, START, SELECT
-* 可编辑：
-*     DEBUG    等于1时，打印调试信息
-*     JOYSTICK_SENSITIVITY 100  调节joystick灵敏度，范围 0 - 500
-*     MINTOUCH 938      hole触摸输入的灵敏度(0-1023),越大越容易触发
-*     头文件 keymap.h 中，可以更改每个按键对应的键盘映射。
-*     若X/Y轴方向相反，更改caliXAxis，caliYAxis
+* This code fits SunFounder multi-control product，which is used to simulate keyboard functions.
+* 1.Supports joystick
+* 2.Supports buttons A, B, X, Y, START, and SELECT
+* Editable:
+*     DEBUG    When it is 1, it will print the debugging information.
+*     JOYSTICK_SENSITIVITY 100  adjust the sensitivity of joystick, ranging 0-500
+*     MINTOUCH 938      sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be.
+*     In header file keymap.h, you can modify the holes' keyboard mapping.
+*     If the axis X and Y is reverse, modify caliXAxis，caliYAxis
 **********************************************************************/
 #include "Joystick.h"
 #include "keymap.h"
 
-#define DEBUG 0         // 等于1时，打印调试信息
-#define JOYSTICK_SENSITIVITY 100 // 调节joystick灵敏度，范围 0 - 500
-#define MINTOUCH 938    // hole触摸输入的灵敏度(0-1023),越大越容易触发
-#define Y_AXIS 1        // X/Y轴标记，joystickHandle中使用
+#define DEBUG 0         // When it is 1, it will print the debugging information.
+#define JOYSTICK_SENSITIVITY 100 // adjust the sensivity of joystick, ranging 0-500
+#define MINTOUCH 938    // sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be.
+#define Y_AXIS 1        // define axis X/Y，used in joystickHandle
 #define X_AXIS 0
 
-// joystick 转换到数字量的阈值，高于MAX，UP输入；低于MIN，DOWN输入
+// threshold of the joystick to shift to digital value, if larger than MAX, UP input; if smaller than MAX, DOWN input.
 int MAXJOYSTICK = 1023 - JOYSTICK_SENSITIVITY;
 int MINJOYSTICK = 0 + JOYSTICK_SENSITIVITY;
 
-int caliXAxis      = -1;  // 调校X方向，取值1和-1
-int caliYAxis      = -1;  // 调校Y方向，取值1和-1
-int directionStep  = 127; // 0~127 摇杆移动步距
+int caliXAxis      = -1;  // adjust the X axis direction, value 1 or -1
+int caliYAxis      = -1;  // adjust the Y axis direction, value 1 or -1
+int directionStep  = 127; // joystick direction step, ranging 0~127
 int JOYSTICK_UP    = caliYAxis * directionStep;
 int JOYSTICK_LEFT  = caliXAxis * directionStep;
 int JOYSTICK_DOWN  = -JOYSTICK_UP;
@@ -70,9 +70,9 @@ const int holeY            = A10;
 
 //==============================================
 // Set variables
-// statusXX[0]是现在状态,statusXX[1]是上一个状态,statusXX[2]是键值，
-// statusXX[3]是X/Y轴标记
-// statusXX[0] == 0表示键位按下
+// statusXX[0] is the present status, statusXX[1] is the previous status, statusXX[2] is key value，
+// statusXX[3] is axis X/Y 
+// statusXX[0] == 0 means the corresponding button is activated
 int statusMode             = 0;
 
 int statusAxisUp[]         = {0, 0, JOYSTICK_UP,    Y_AXIS};
@@ -120,7 +120,7 @@ void setup() {
   Joystick.begin();
 }
 
-// 读值，并转换成数字状态，存入这个键的数组中
+// read the analog, and shift to digital one to store in array
 void readStatus() {
   int valueXAxis      = analogRead(joystickXAxis);
   int valueYAxis      = analogRead(joystickYAxis);
@@ -186,7 +186,7 @@ void readStatus() {
   if(DEBUG){printValue();}
 }
 
-// 串口绘图器 Serial Plotter
+// Serial Plotter
 void printValue(){
   Serial.print(statusHoleUp[0]);Serial.print(',');
   Serial.print(statusHoleLeft[0]);Serial.print(',');
@@ -210,7 +210,7 @@ void releaseHandle(int key) {
   Joystick.releaseButton(key);
 }
 
-// 按键处理函数 Handle for Buttons
+// Handle for Buttons function
 void keyHandle(int *key){
   if (key[1] != key[0]) {
     if (key[0] == 0)
@@ -224,19 +224,19 @@ void keyHandle(int *key){
 
 // Handle for joystick
 void joystickHandle(int *key){
-  // key[0]是现在状态，key[1]是上一个状态，key[2]是键值，
-  // key[3]是X/Y轴标记
-  // key[0] == 0表示键位按下
-  if (key[1] != key[0]) { // 有状态变化时处理
+  // key[0] is the present status, key[1] is the previous status, key[2] is the key value
+  // key[3] is axis X/Y
+  // key[0] ==  means the corresponding button is activated
+  if (key[1] != key[0]) { // handle it when its status changes
     if (key[0] == 0){
-      if(key[3] == Y_AXIS){ // 根据key[3]来决定使用setYAxis还是setXAxis
+      if(key[3] == Y_AXIS){ // according to key[3] to select setYAxis or setXAxis
         Joystick.setYAxis(key[2]);
        }
       else if(key[3] == X_AXIS){
         Joystick.setXAxis(key[2]);
        }
     }
-    else{ // 没有方向输入时，joystick的数值回到0
+    else{ // No direction step change detected, joystick parameter return to 0
       if(key[3] == Y_AXIS){
         Joystick.setYAxis(0);
        }
@@ -249,7 +249,7 @@ void joystickHandle(int *key){
   delay(1);
 }
 
-// 扫描各按键
+// scan all buttons status
 void scan() {
   // Buttons
   // UP

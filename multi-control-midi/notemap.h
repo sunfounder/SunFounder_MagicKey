@@ -1,15 +1,15 @@
-// int currentVelocity 音符力度0~127，可以自己设置
-// NOTE_C, NOTE_D 等后面的数值是音调数据，修改数值参考note number list
-// Note Number List，表示各种音调
+// int currentVelocity means velocity parameters is 0~127, you can set yourself.
+// NOTE_C, NOTE_D, the values behind them are tone values, you can modify them refering to note number list
+// Note Number List，shows the tone numbers
 
-#define CHANNEL_KEYBOARD 0  // 使用keyboard的CHANNEL
-#define CHANNEL_DRUM 9      // 使用drum的CHANNEL
-#define CONTROL_VOLUME  7   // 控制种类,7表示更改channel值 Continuous Controllers
-int currentVelocity = 127;  // 音符力度0~127 Velocity parameter
-// 更多midi控制参数 http://nickfever.com/music/midi-cc-list
+#define CHANNEL_KEYBOARD 0  // use keyboard CHANNEL
+#define CHANNEL_DRUM 9      // use drum CHANNEL
+#define CONTROL_VOLUME  7   // Continuous Controllers, 7 means to change channel
+int currentVelocity = 127;  // Velocity parameters range from 0 to 127
+// for more information about midi control parameters, please refer to http://nickfever.com/music/midi-cc-list
 
 #ifdef KEYBOARD
-	int channel = CHANNEL_KEYBOARD;  // channel更改乐器，另外不同乐器midi数值不同
+	int channel = CHANNEL_KEYBOARD;  // select different instrument channel with different midi values
 	// keyboard note
 	#define NOTE_C   60   // C5
 	#define NOTE_D   62   // D5

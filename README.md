@@ -11,7 +11,7 @@ Quick Links:
 
 <a id="about_this_{thing}"></a>
 ### About SunFounder Multi Control:
-SunFounder Multi Control is a multi control based on atmel mega32U4. With the mini USB port, you can connect it to the PC or Raspberrry Pi to use.
+SunFounder Multi Control is a multi control based on atmel ATmega32U4. With the mini USB port, you can connect it to the PC or Raspberrry Pi to use.
 SunFounder Multi Control can be used to simulate gamepad handle，midi device，and PC keyboard.
 In gamepad mode, the buttons display is almost the same with the gamepad, so it is quite suitable for retroPie games.
 In midi mode, clip GND hole to the operator with the alligator clip and cable, while other holes to some conductive objects. Thus it can realize the midi input when the operator touches the conductive objects.

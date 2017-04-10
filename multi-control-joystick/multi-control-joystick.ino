@@ -114,7 +114,7 @@ void setup() {
   pinMode(pinY,         INPUT_PULLUP);
   pinMode(pinStart,     INPUT_PULLUP);
   pinMode(pinSelect,    INPUT_PULLUP);
-  pinMode(selector,     INPUT_PULLUP);
+  pinMode(Mode,         INPUT_PULLUP);
 
   Serial.begin(9600);
   Joystick.begin();
@@ -147,8 +147,8 @@ void readStatus() {
   if (valueXAxis > MAXJOYSTICK)      statusAxisRight[0]   = 0;
   else                               statusAxisRight[0]   = 1;
 
-  statusSelcetor = digitalRead(selector);
-  if (statusSelcetor == 0){  // Enable Hole Mode
+  statusMode = digitalRead(Mode);
+  if (statusMode == 0){  // Enable Hole Mode
     statusHoleUp[0]     = analogRead(holeUp);
     statusHoleLeft[0]   = analogRead(holeLeft);
     statusHoleDown[0]   = analogRead(holeDown);
@@ -277,7 +277,7 @@ void scan() {
   // SELECT
   keyHandle(statusPinSelect);
 
-  if (statusSelcetor == 0){  // Enable Hole Mode
+  if (statusMode == 0){  // Enable Hole Mode
     joystickHandle(statusHoleUp);
     joystickHandle(statusHoleDown);
     joystickHandle(statusHoleLeft);

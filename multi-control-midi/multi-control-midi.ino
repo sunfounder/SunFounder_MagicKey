@@ -62,7 +62,7 @@ void setup() {
 
 void readStatus(){   // read the analog, and shift to digital one to store in array holeX[1]
   statusMode = digitalRead(Mode);
-  if(statusMode == 0){    // hole switch
+  //if(statusMode == 0){    // hole switch
     holeA1[0]  = analogRead(A1);
     holeA2[0]  = analogRead(A2);
     holeC[0]   = analogRead(A3);
@@ -94,7 +94,7 @@ void readStatus(){   // read the analog, and shift to digital one to store in ar
     else                      holeB[1]   = 1;
     if (holeCP[0] < MINTOUCH)   holeCP[1]  = 0;
     else                      holeCP[1]  = 1;
-}
+//}
   if(DEBUG){printValue();}
 }
 

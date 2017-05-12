@@ -24,6 +24,34 @@
 #define DEBUG 0          // When it is 1, it will print the debugging information.
 #define JOYSTICK_SENSITIVITY 100 // adjust the sensitivity of joystick, ranging 0-500
 #define MINTOUCH 938     // sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be.
+#define Y_AXIS 1        // define axis X/Y，used in joystickHandle
+#define X_AXIS 0
+#define debounceDelay 20
+
+#define AxisUp      0
+#define AxisDown    1
+#define AxisLeft    2
+#define AxisRight   3
+#define PinUp       4
+#define PinDown     5
+#define PinLeft     6
+#define PinRight    7
+#define HoleUp      8
+#define HoleDown    9
+#define HoleLeft    10
+#define HoleRight   11
+#define PinA        12
+#define PinB        13
+#define PinX        14
+#define PinY        15
+#define PinStart    16
+#define PinSelect   17
+#define HoleA       18
+#define HoleB       19
+#define HoleX       20
+#define HoleY       21
+#define HoleStart   22
+#define HoleSelect  23
 
 // threshold of the joystick to shift to digital value, if larger than MAX, UP input; if smaller than MAX, DOWN input.
 int MAXJOYSTICK = 1023 - JOYSTICK_SENSITIVITY;
@@ -58,39 +86,48 @@ const int holeX            = A9;
 const int holeY            = A10;
 //==============================================
 
+int statusMode = 0;// if mode on left(==0),hole key enable
+
+
 //==============================================
-// Set variables
-// key[0] is the present status   statusAX
-// key[1] is the previous status lastStatusAX
-// key[2] is the key value     key value
-// key[0] == 0 means the corresponding buttons is activated
-int statusSelcetor         = 0;
-
-int statusAxisUp[]         = {0, 0, KEYBOARD_UP};
-int statusAxisDown[]       = {0, 0, KEYBOARD_DOWN};
-int statusAxisLeft[]       = {0, 0, KEYBOARD_LEFT};
-int statusAxisRight[]      = {0, 0, KEYBOARD_RIGHT};
-int statusPinUp[]          = {0, 0, KEYBOARD_UP};
-int statusPinDown[]        = {0, 0, KEYBOARD_DOWN};
-int statusPinLeft[]        = {0, 0, KEYBOARD_LEFT};
-int statusPinRight[]       = {0, 0, KEYBOARD_RIGHT};
-int statusHoleUp[]         = {0, 0, KEYBOARD_UP};
-int statusHoleDown[]       = {0, 0, KEYBOARD_DOWN};
-int statusHoleLeft[]       = {0, 0, KEYBOARD_LEFT};
-int statusHoleRight[]      = {0, 0, KEYBOARD_RIGHT};
-
-int statusPinA[]           = {0, 0, KEYBOARD_A};
-int statusPinB[]           = {0, 0, KEYBOARD_B};
-int statusPinX[]           = {0, 0, KEYBOARD_X};
-int statusPinY[]           = {0, 0, KEYBOARD_Y};
-int statusPinStart[]       = {0, 0, KEYBOARD_START};
-int statusPinSelect[]      = {0, 0, KEYBOARD_SELECT};
-int statusHoleA[]          = {0, 0, KEYBOARD_A};
-int statusHoleB[]          = {0, 0, KEYBOARD_B};
-int statusHoleX[]          = {0, 0, KEYBOARD_X};
-int statusHoleY[]          = {0, 0, KEYBOARD_Y};
-int statusHoleStart[]      = {0, 0, KEYBOARD_START};
-int statusHoleSelect[]     = {0, 0, KEYBOARD_SELECT};
+// Creat a struct type named status_struct
+struct status_struct{
+  int pin;     // pin number
+  int cStatus; // current_status
+  int lStatus; // last_status
+  int key;     // key value
+  bool isXY;    // is x or y axis
+  unsigned long dTime;  // lastDebounceTime
+  bool sent;    // sent flag
+};
+//==============================================
+// Creat an array, the member type is status_struct
+status_struct  state[] = {
+// pin      cStatus  lStatus   key       isXY dTime sent
+  {joystickYAxis, 0, 0, JOYSTICK_UP,     Y_AXIS, 0, 0},
+  {joystickXAxis, 0, 0, JOYSTICK_LEFT,   X_AXIS, 0, 0},
+  {joystickYAxis, 0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
+  {joystickXAxis, 0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
+  {pinUp,         0, 0, JOYSTICK_UP,     Y_AXIS, 0, 0},
+  {pinDown,       0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
+  {pinLeft,       0, 0, JOYSTICK_LEFT,   X_AXIS, 0, 0},
+  {pinRight,      0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
+  {holeUp,        0, 0, JOYSTICK_UP,     Y_AXIS, 0, 0},
+  {holeDown,      0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
+  {holeLeft,      0, 0, JOYSTICK_LEFT,   X_AXIS, 0, 0},
+  {holeRight,     0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
+  {pinA,          0, 0, JOYSTICK_A,      NULL,   0, 0},
+  {pinB,          0, 0, JOYSTICK_B,      NULL,   0, 0},
+  {pinX,          0, 0, JOYSTICK_X,      NULL,   0, 0},
+  {pinY,          0, 0, JOYSTICK_Y,      NULL,   0, 0},
+  {pinStart,      0, 0, JOYSTICK_START,  NULL,   0, 0},
+  {pinSelect,     0, 0, JOYSTICK_SELECT, NULL,   0, 0},
+  {holeA,         0, 0, JOYSTICK_A,      NULL,   0, 0},
+  {holeB,         0, 0, JOYSTICK_B,      NULL,   0, 0},
+  {holeX,         0, 0, JOYSTICK_X,      NULL,   0, 0},
+  {holeY,         0, 0, JOYSTICK_Y,      NULL,   0, 0},
+  {holeStart,     0, 0, JOYSTICK_START,  NULL,   0, 0},
+  {holeSelect,    0, 0, JOYSTICK_SELECT, NULL,   0, 0}};
 //==============================================
 
 // initialize the buttons' inputs:
@@ -107,89 +144,123 @@ void setup() {
   pinMode(pinSelect,    INPUT_PULLUP);
   pinMode(selector,     INPUT_PULLUP);
 
-  //Serial.begin(9600);
+  Serial.begin(9600);
   Keyboard.begin();
 }
 
-// read the analog, and shift to digital one to store in array
-void readStatus() {
-  int valueXAxis      = analogRead(joystickXAxis);
-  int valueYAxis      = analogRead(joystickYAxis);
-  statusPinUp[0]      = digitalRead(pinUp);
-  statusPinDown[0]    = digitalRead(pinDown);
-  statusPinLeft[0]    = digitalRead(pinLeft);
-  statusPinRight[0]   = digitalRead(pinRight);
-  statusPinA[0]       = digitalRead(pinA);
-  statusPinB[0]       = digitalRead(pinB);
-  statusPinX[0]       = digitalRead(pinX);
-  statusPinY[0]       = digitalRead(pinY);
-  statusPinStart[0]   = digitalRead(pinStart);
-  statusPinSelect[0]  = digitalRead(pinSelect);
+void debounced_read(int num){ // digitalRead and dithering elimination
+  int reading = digitalRead(state[num].pin);
 
-  Serial.print("x:");Serial.print(valueXAxis);
-  Serial.print("    y:");Serial.println(valueYAxis);
-
-  if (valueYAxis > MAXJOYSTICK)      statusAxisUp[0]      = 0;
-  else                               statusAxisUp[0]      = 1;
-  if (valueYAxis < MINJOYSTICK)      statusAxisDown[0]    = 0;
-  else                               statusAxisDown[0]    = 1;
-  if (valueXAxis < MINJOYSTICK)      statusAxisLeft[0]    = 0;
-  else                               statusAxisLeft[0]    = 1;
-  if (valueXAxis > MAXJOYSTICK)      statusAxisRight[0]   = 0;
-  else                               statusAxisRight[0]   = 1;
-
-  statusSelcetor = digitalRead(selector);
-  if (statusSelcetor == 0){  // Enable Hole Mode
-    statusHoleUp[0]     = analogRead(holeUp);
-    statusHoleLeft[0]   = analogRead(holeLeft);
-    statusHoleDown[0]   = analogRead(holeDown);
-    statusHoleRight[0]  = analogRead(holeRight);
-    statusHoleA[0]      = analogRead(holeA);
-    statusHoleB[0]      = analogRead(holeB);
-    statusHoleX[0]      = analogRead(holeX);
-    statusHoleY[0]      = analogRead(holeY);
-    statusHoleStart[0]  = analogRead(holeStart);
-    statusHoleSelect[0] = analogRead(holeSelect);
-
-    if(DEBUG){printValue();}
-
-    if (statusHoleUp[0] < MINTOUCH)     statusHoleUp[0]     = 0;
-    else                                statusHoleUp[0]     = 1;
-    if (statusHoleDown[0] < MINTOUCH)   statusHoleDown[0]   = 0;
-    else                                statusHoleDown[0]   = 1;
-    if (statusHoleLeft[0] < MINTOUCH)   statusHoleLeft[0]   = 0;
-    else                                statusHoleLeft[0]   = 1;
-    if (statusHoleRight[0] < MINTOUCH)  statusHoleRight[0]  = 0;
-    else                                statusHoleRight[0]  = 1;
-    if (statusHoleA[0] < MINTOUCH)      statusHoleA[0]      = 0;
-    else                                statusHoleA[0]      = 1;
-    if (statusHoleB[0] < MINTOUCH)      statusHoleB[0]      = 0;
-    else                                statusHoleB[0]      = 1;
-    if (statusHoleX[0] < MINTOUCH)      statusHoleX[0]      = 0;
-    else                                statusHoleX[0]      = 1;
-    if (statusHoleY[0] < MINTOUCH)      statusHoleY[0]      = 0;
-    else                                statusHoleY[0]      = 1;
-    if (statusHoleStart[0] < MINTOUCH)  statusHoleStart[0]  = 0;
-    else                                statusHoleStart[0]  = 1;
-    if (statusHoleSelect[0] < MINTOUCH) statusHoleSelect[0] = 0;
-    else                                statusHoleSelect[0] = 1;
+  if (reading != state[num].lStatus) {
+    state[num].dTime = millis();
   }
-  if(DEBUG){printValue();}
+
+  if ((millis() - state[num].dTime) > debounceDelay) {
+    if (reading != state[num].cStatus) {
+      state[num].cStatus = reading;
+      Serial.println("have a input");
+      state[num].sent = 1;
+    }
+  }
+  state[num].lStatus = reading;
+}
+
+void analog_read(int num){ // analogRead, and shift to digital one to store
+  bool threshold;
+  int value      = analogRead(state[num].pin);
+  if(num < 4){  // if is joystick pin
+    if(num==0 || num==3)       // if is up or right
+      threshold = (value > MAXJOYSTICK);
+    else if (num==1 || num==2) // if is down or left
+      threshold = (value < MINJOYSTICK);
+  }
+  else          // if is hole pin
+    threshold = (value < MINTOUCH);
+
+  if (threshold)     // the status is pressed
+    state[num].cStatus    = 0;
+  else               // the status is released
+    state[num].cStatus    = 1;
+
+  if (state[num].lStatus != state[num].cStatus) { // handle it when its state changes
+    state[num].sent = 1;
+    state[num].lStatus = state[num].cStatus;
+  }
+}
+
+void readStatus() {  // read status
+  debounced_read(PinUp);
+  debounced_read(PinDown);
+  debounced_read(PinLeft);
+  debounced_read(PinRight);
+  debounced_read(PinA);
+  debounced_read(PinB);
+  debounced_read(PinX);
+  debounced_read(PinY);
+  debounced_read(PinStart);
+  debounced_read(PinSelect);
+
+  analog_read(AxisUp);
+  analog_read(AxisDown);
+  analog_read(AxisLeft);
+  analog_read(AxisRight);
+
+  statusMode = digitalRead(Mode);
+  if (statusMode == 0){  // Enable Hole Mode
+    analog_read(HoleUp);
+    analog_read(HoleLeft);
+    analog_read(HoleDown);
+    analog_read(HoleRight);
+    analog_read(HoleA);
+    analog_read(HoleB);
+    analog_read(HoleX);
+    analog_read(HoleY);
+    analog_read(HoleStart);
+    analog_read(HoleSelect);
+  }
 }
 
 // Serial Plotter
-void printValue(){
-  Serial.print(statusHoleUp[0]);Serial.print(',');
-  Serial.print(statusHoleLeft[0]);Serial.print(',');
-  Serial.print(statusHoleDown[0]);Serial.print(',');
-  Serial.print(statusHoleRight[0]);Serial.print(',');
-  Serial.print(statusHoleSelect[0]);Serial.print(',');
-  Serial.print(statusHoleStart[0]);Serial.print(',');
-  Serial.print(statusHoleA[0]);Serial.print(',');
-  Serial.print(statusHoleB[0]);Serial.print(',');
-  Serial.print(statusHoleX[0]);Serial.print(',');
-  Serial.print(statusHoleY[0]);Serial.print(',');
-  Serial.print(MINTOUCH);Serial.print(',');
+void debug(int value){
+  Serial.print(value);Serial.print(',');
+}
+void printValue(bool holes, bool axis, bool pins){
+  if (holes){ // printValue holes status
+    debug(state[HoleUp].cStatus);
+    debug(state[HoleLeft].cStatus);
+    debug(state[HoleDown].cStatus);
+    debug(state[HoleRight].cStatus);
+    debug(state[HoleSelect].cStatus);
+    debug(state[HoleStart].cStatus);
+    debug(state[HoleA].cStatus);
+    debug(state[HoleB].cStatus);
+    debug(state[HoleX].cStatus);
+    debug(state[HoleY].cStatus);
+    debug(MINTOUCH);
+  }
+  if (axis){ // printValue axis status
+    debug(state[AxisUp].cStatus);
+    debug(state[AxisDown].cStatus);
+    debug(state[AxisLeft].cStatus);
+    debug(state[AxisRight].cStatus);
+    debug(state[AxisUp].lStatus);
+    debug(state[AxisDown].lStatus);
+    debug(state[AxisLeft].lStatus);
+    debug(state[AxisRight].lStatus);
+  }
+  if (pins){ // printValue pins status
+    debug(state[PinUp].cStatus);
+    debug(state[PinDown].cStatus);
+    debug(state[PinLeft].cStatus);
+    debug(state[PinRight].cStatus);
+    debug(state[PinA].cStatus);
+    debug(state[PinB].cStatus);
+    debug(state[PinX].cStatus);
+    debug(state[PinY].cStatus);
+    debug(state[PinStart].cStatus);
+    debug(state[PinSelect].cStatus);
+  }
+  Serial.println(' ');
 }
 
 // Handle press command
@@ -203,13 +274,16 @@ void releaseHandle(int key) {
 }
 
 // Handle for Buttons functions
-void keyHandle(int *key){
-  if (key[1] != key[0]) {  // handle it when its status changes
-    if (key[0] == 0)
-      pressHandle(key[2]);
+void keyHandle(int num){
+  if (state[num].sent) {
+    if (state[num].cStatus == 0){
+      debug(state[num].cStatus);debug(state[num].lStatus);
+      //Serial.print(num);Serial.println(" pressed");
+      pressHandle(state[num].key);
+    }
     else
-      releaseHandle(key[2]);
-    key[1] = key[0];
+      releaseHandle(state[num].key);
+    state[num].sent = 0;
   }
   delay(1);
 }
@@ -217,46 +291,37 @@ void keyHandle(int *key){
 // Scan all the buttons status
 void scan() {
   // Buttons
-  // UP
-  keyHandle(statusPinUp);
-  keyHandle(statusAxisUp);
-  // Down
-  keyHandle(statusPinDown);
-  keyHandle(statusAxisDown);
-  // Left
-  keyHandle(statusPinLeft);
-  keyHandle(statusAxisLeft);
-  // Right
-  keyHandle(statusPinRight);
-  keyHandle(statusAxisRight);
-  // A
-  keyHandle(statusPinA);
-  // B
-  keyHandle(statusPinB);
-  // X
-  keyHandle(statusPinX);
-  // Y
-  keyHandle(statusPinY);
-  // START
-  keyHandle(statusPinStart);
-  // SELECT
-  keyHandle(statusPinSelect);
+  keyHandle(PinUp);
+  keyHandle(AxisUp);
+  keyHandle(PinDown);
+  keyHandle(AxisDown);
+  keyHandle(PinLeft);
+  keyHandle(AxisLeft);
+  keyHandle(PinRight);
+  keyHandle(AxisRight);
+  keyHandle(PinA);
+  keyHandle(PinB);
+  keyHandle(PinX);
+  keyHandle(PinY);
+  keyHandle(PinStart);
+  keyHandle(PinSelect);
 
-  if (statusSelcetor == 0){  // Enable Hole Mode
-    keyHandle(statusHoleUp);
-    keyHandle(statusHoleDown);
-    keyHandle(statusHoleLeft);
-    keyHandle(statusHoleRight);
-    keyHandle(statusHoleA);
-    keyHandle(statusHoleB);
-    keyHandle(statusHoleX);
-    keyHandle(statusHoleY);
-    keyHandle(statusHoleStart);
-    keyHandle(statusHoleSelect);
+  if (statusMode == 0){  // Enable Hole Mode
+    keyHandle(HoleUp);
+    keyHandle(HoleDown);
+    keyHandle(HoleLeft);
+    keyHandle(HoleRight);
+    keyHandle(HoleA);
+    keyHandle(HoleB);
+    keyHandle(HoleX);
+    keyHandle(HoleY);
+    keyHandle(HoleStart);
+    keyHandle(HoleSelect);
   }
 }
 
 void loop() {
   readStatus();
+  //printValue(1,1,1); // holes, axis, pins
   scan();
 }

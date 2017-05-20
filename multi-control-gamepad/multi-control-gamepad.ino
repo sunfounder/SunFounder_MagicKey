@@ -1,6 +1,6 @@
 /**********************************************************************
-* Filename    : multi-control-joystick.ino
-* Description : SunFounder multi-control joystick driver
+* Filename    : multi-control-gamepad.ino
+* Description : SunFounder multi-control gamepad driver
 * Author      : Dream
 * Brand       : SunFounder
 * E-mail      : service@sunfounder.com

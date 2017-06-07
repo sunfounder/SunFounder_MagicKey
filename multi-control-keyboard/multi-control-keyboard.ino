@@ -71,7 +71,7 @@ const int pinX             = 11;
 const int pinY             = 5;
 const int pinStart         = 0;
 const int pinSelect        = 1;
-const int selector         = 7;
+const int Mode             = 7;
 
 // analog clip hole:
 const int holeUp           = A1;
@@ -104,30 +104,30 @@ struct status_struct{
 // Creat an array, the member type is status_struct
 status_struct  state[] = {
 // pin      cStatus  lStatus   key       isXY dTime sent
-  {joystickYAxis, 0, 0, JOYSTICK_UP,     Y_AXIS, 0, 0},
-  {joystickXAxis, 0, 0, JOYSTICK_LEFT,   X_AXIS, 0, 0},
-  {joystickYAxis, 0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
-  {joystickXAxis, 0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
-  {pinUp,         0, 0, JOYSTICK_UP,     Y_AXIS, 0, 0},
-  {pinDown,       0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
-  {pinLeft,       0, 0, JOYSTICK_LEFT,   X_AXIS, 0, 0},
-  {pinRight,      0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
-  {holeUp,        0, 0, JOYSTICK_UP,     Y_AXIS, 0, 0},
-  {holeDown,      0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
-  {holeLeft,      0, 0, JOYSTICK_LEFT,   X_AXIS, 0, 0},
-  {holeRight,     0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
-  {pinA,          0, 0, JOYSTICK_A,      NULL,   0, 0},
-  {pinB,          0, 0, JOYSTICK_B,      NULL,   0, 0},
-  {pinX,          0, 0, JOYSTICK_X,      NULL,   0, 0},
-  {pinY,          0, 0, JOYSTICK_Y,      NULL,   0, 0},
-  {pinStart,      0, 0, JOYSTICK_START,  NULL,   0, 0},
-  {pinSelect,     0, 0, JOYSTICK_SELECT, NULL,   0, 0},
-  {holeA,         0, 0, JOYSTICK_A,      NULL,   0, 0},
-  {holeB,         0, 0, JOYSTICK_B,      NULL,   0, 0},
-  {holeX,         0, 0, JOYSTICK_X,      NULL,   0, 0},
-  {holeY,         0, 0, JOYSTICK_Y,      NULL,   0, 0},
-  {holeStart,     0, 0, JOYSTICK_START,  NULL,   0, 0},
-  {holeSelect,    0, 0, JOYSTICK_SELECT, NULL,   0, 0}};
+  {joystickYAxis, 0, 0, KEYBOARD_UP,     Y_AXIS, 0, 0},
+  {joystickXAxis, 0, 0, KEYBOARD_LEFT,   X_AXIS, 0, 0},
+  {joystickYAxis, 0, 0, KEYBOARD_DOWN,   Y_AXIS, 0, 0},
+  {joystickXAxis, 0, 0, KEYBOARD_RIGHT,  X_AXIS, 0, 0},
+  {pinUp,         0, 0, KEYBOARD_UP,     Y_AXIS, 0, 0},
+  {pinDown,       0, 0, KEYBOARD_DOWN,   Y_AXIS, 0, 0},
+  {pinLeft,       0, 0, KEYBOARD_LEFT,   X_AXIS, 0, 0},
+  {pinRight,      0, 0, KEYBOARD_RIGHT,  X_AXIS, 0, 0},
+  {holeUp,        0, 0, KEYBOARD_UP,     Y_AXIS, 0, 0},
+  {holeDown,      0, 0, KEYBOARD_DOWN,   Y_AXIS, 0, 0},
+  {holeLeft,      0, 0, KEYBOARD_LEFT,   X_AXIS, 0, 0},
+  {holeRight,     0, 0, KEYBOARD_RIGHT,  X_AXIS, 0, 0},
+  {pinA,          0, 0, KEYBOARD_A,      NULL,   0, 0},
+  {pinB,          0, 0, KEYBOARD_B,      NULL,   0, 0},
+  {pinX,          0, 0, KEYBOARD_X,      NULL,   0, 0},
+  {pinY,          0, 0, KEYBOARD_Y,      NULL,   0, 0},
+  {pinStart,      0, 0, KEYBOARD_START,  NULL,   0, 0},
+  {pinSelect,     0, 0, KEYBOARD_SELECT, NULL,   0, 0},
+  {holeA,         0, 0, KEYBOARD_A,      NULL,   0, 0},
+  {holeB,         0, 0, KEYBOARD_B,      NULL,   0, 0},
+  {holeX,         0, 0, KEYBOARD_X,      NULL,   0, 0},
+  {holeY,         0, 0, KEYBOARD_Y,      NULL,   0, 0},
+  {holeStart,     0, 0, KEYBOARD_START,  NULL,   0, 0},
+  {holeSelect,    0, 0, KEYBOARD_SELECT, NULL,   0, 0}};
 //==============================================
 
 // initialize the buttons' inputs:
@@ -142,7 +142,7 @@ void setup() {
   pinMode(pinY,         INPUT_PULLUP);
   pinMode(pinStart,     INPUT_PULLUP);
   pinMode(pinSelect,    INPUT_PULLUP);
-  pinMode(selector,     INPUT_PULLUP);
+  pinMode(Mode,         INPUT_PULLUP);
 
   Serial.begin(9600);
   Keyboard.begin();

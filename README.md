@@ -6,7 +6,7 @@ Quick Links:
  * [About SunFounder Multi-Control](#about_this_{thing})
  * [Update](#update)
  * [About SunFounder](#about_sunfounder)
- * [TutorialS](#tutorials)
+ * [Tutorials](#tutorials)
  * [License](#license)
  * [Contact us](#contact_us)
 

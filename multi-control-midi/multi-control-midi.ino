@@ -5,7 +5,8 @@
 * Brand       : SunFounder
 * E-mail      : service@sunfounder.com
 * Website     : www.sunfounder.com
-* Update      : V1.0.0    2017-3-15
+* Update      : V2.0.0    2017-7-15
+*               add pin and joystick control
 *
 *
 * This code fits SunFounder multi-control product，which is used to simulate midi device functions.
@@ -24,175 +25,259 @@
 #include "MIDIUSB.h"
 #include "notemap.h"
 
-#define DEBUG 0             // When it is 1, it will print the debugging information
-#define MINTOUCH 900        // sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be
+#define DEBUG 1         // When it is 1, it will print the debugging information.
+#define JOYSTICK_SENSITIVITY 100 // adjust the sensivity of joystick, ranging 0-500
+#define MINTOUCH 938    // sensitivity of holes(0-1023), the larger the parameter is, the more sensitive they will be.
+#define Y_AXIS 1        // define axis X/Y，used in joystickHandle
+#define X_AXIS 0
+#define debounceDelay 20
 
+#define AxisUp      0
+#define AxisLeft    1
+#define AxisDown    2
+#define AxisRight   3
+#define PinSelect   4
+#define PinStart    5
+#define PinA        6
+#define PinB        7
+#define PinX        8
+#define PinY        9
+#define PinUp       10
+#define PinLeft     11
+#define PinDown     12
+#define PinRight    13
+#define HoleUp      14
+#define HoleLeft    15
+#define HoleDown    16
+#define HoleRight   17
+#define HoleSelect  18
+#define HoleStart   19
+#define HoleA       20
+#define HoleB       21
+#define HoleX       22
+#define HoleY       23
+
+// threshold of the joystick to shift to digital value, if larger than MAX, UP input; if smaller than MAX, DOWN input.
+int MAXJOYSTICK = 1023 - JOYSTICK_SENSITIVITY;
+int MINJOYSTICK = 0 + JOYSTICK_SENSITIVITY;
 int mod = 0;                // for scale adjustment, Octave parameter
 
-const int Mode             = 7;  // Switch, to turn on/off the touching holes
-const int channelPlus      = 3;  // button A, used to configure channel function
-const int channelMinus     = 2;  // button B, used to configure channel function
-int statusMode             = 0;
-//==============================================
-// Set variables
-// holeAX[0] the analog value to be read            valueAX
-// holeAX[1] analog to digital one                  statusAX
-// holeAX[2] output the value only when it changes  lastStatusAX
-// holeAX[3] note map                               NOTE_AX
-// holeAX[4] lastNoteAX, value of modified tone     lastNoteAX
-int holeA1[] = {0, 0, 0, 0};
-int holeA2[] = {0, 0, 0, 0};
-int holeC[]  = {0, 0, 0, NOTE_C, 0};
-int holeD[]  = {0, 0, 0, NOTE_D, 0};
-int holeE[]  = {0, 0, 0, NOTE_E, 0};
-int holeF[]  = {0, 0, 0, NOTE_F, 0};
-int holeG[]  = {0, 0, 0, NOTE_G, 0};
-int holeA[]  = {0, 0, 0, NOTE_A, 0};
-int holeB[]  = {0, 0, 0, NOTE_B, 0};
-int holeCP[] = {0, 0, 0, NOTE_CP, 0};
+int caliXAxis      = -1;  // adjust the X axis direction, value 1 or -1
+int caliYAxis      = -1;  // adjust the Y axis direction, value 1 or -1
+int directionStep  = 127; // joystick direction step, ranging 0~127
+int JOYSTICK_UP    = caliYAxis * directionStep;
+int JOYSTICK_LEFT  = caliXAxis * directionStep;
+int JOYSTICK_DOWN  = -JOYSTICK_UP;
+int JOYSTICK_RIGHT = -JOYSTICK_LEFT;
 
 //==============================================
+// set pin numbers for the buttons:
+const int joystickXAxis    = A0;
+const int joystickYAxis    = A11;
+const int pinUp            = 16;
+const int pinLeft          = 15;
+const int pinDown          = 14;
+const int pinRight         = 13;
+const int pinA             = 3;
+const int pinB             = 2;
+const int pinX             = 11;
+const int pinY             = 5;
+const int pinStart         = 0;
+const int pinSelect        = 1;
+const int Mode             = 7;
 
+// analog clip hole:
+const int holeUp           = A1;
+const int holeLeft         = A2;
+const int holeDown         = A3;
+const int holeRight        = A4;
+const int holeSelect       = A5;
+const int holeStart        = A6;
+const int holeA            = A7;
+const int holeB            = A8;
+const int holeX            = A9;
+const int holeY            = A10;
+//==============================================
+
+int statusMode = 0;// if mode on left(==0),hole key enable
+
+
+//==============================================
+// Creat a struct type named status_struct
+struct status_struct{
+  int pin;     // pin number
+  int cStatus; // current_status
+  int lStatus; // last_status
+  int cNote;     // current_note
+  int lNote;     // last_note
+  bool isXY;    // is x or y axis
+  unsigned long dTime;  // lastDebounceTime
+  bool sent;    // sent flag
+};
+//==============================================
+// Creat an array, the member type is status_struct
+status_struct  state[] = {
+// pin      cStatus lStatus key  isXY dTime sent
+  {joystickYAxis, 0, 0, 0,        Y_AXIS, 0, 0},
+  {joystickXAxis, 0, 0, 0,        X_AXIS, 0, 0},
+  {joystickYAxis, 0, 0, NOTE_C,   Y_AXIS, 0, 0},
+  {joystickXAxis, 0, 0, NOTE_D,   X_AXIS, 0, 0},
+  {pinSelect,     0, 0, NOTE_E,   NULL,   0, 0},
+  {pinStart,      0, 0, NOTE_F,   NULL,   0, 0},
+  {pinA,          0, 0, NOTE_G,   NULL,   0, 0},
+  {pinB,          0, 0, NOTE_A,   NULL,   0, 0},
+  {pinX,          0, 0, NOTE_B,   NULL,   0, 0},
+  {pinY,          0, 0, NOTE_CP,  NULL,   0, 0},
+  {pinUp,         0, 0, 0,        Y_AXIS, 0, 0},
+  {pinLeft,       0, 0, 0,        X_AXIS, 0, 0},
+  {pinDown,       0, 0, NOTE_C,   Y_AXIS, 0, 0},
+  {pinRight,      0, 0, NOTE_D,   X_AXIS, 0, 0},
+  {holeUp,        0, 0, 0,        Y_AXIS, 0, 0},
+  {holeLeft,      0, 0, 0,        X_AXIS, 0, 0},
+  {holeDown,      0, 0, NOTE_C,   Y_AXIS, 0, 0},
+  {holeRight,     0, 0, NOTE_D,   X_AXIS, 0, 0},
+  {holeSelect,    0, 0, NOTE_E,   NULL,   0, 0},
+  {holeStart,     0, 0, NOTE_F,   NULL,   0, 0},
+  {holeA,         0, 0, NOTE_G,   NULL,   0, 0},
+  {holeB,         0, 0, NOTE_A,   NULL,   0, 0},
+  {holeX,         0, 0, NOTE_B,   NULL,   0, 0},
+  {holeY,         0, 0, NOTE_CP,  NULL,   0, 0}
+  };
+  //==============================================
+
+// initialize the buttons' inputs:
 void setup() {
-  Serial.begin(115200);
-  pinMode(channelPlus, INPUT_PULLUP);
-  pinMode(channelMinus, INPUT_PULLUP);
+  pinMode(pinUp,        INPUT_PULLUP);
+  pinMode(pinLeft,      INPUT_PULLUP);
+  pinMode(pinDown,      INPUT_PULLUP);
+  pinMode(pinRight,     INPUT_PULLUP);
+  pinMode(pinA,         INPUT_PULLUP);
+  pinMode(pinB,         INPUT_PULLUP);
+  pinMode(pinX,         INPUT_PULLUP);
+  pinMode(pinY,         INPUT_PULLUP);
+  pinMode(pinStart,     INPUT_PULLUP);
+  pinMode(pinSelect,    INPUT_PULLUP);
+  pinMode(Mode,         INPUT_PULLUP);
+
+  Serial.begin(9600);
   controlChange(channel, CONTROL_VOLUME, 127); // setup channel
 }
 
-void readStatus(){   // read the analog, and shift to digital one to store in array holeX[1]
+void debounced_read(int num){ // digitalRead and dithering elimination
+  int reading = digitalRead(state[num].pin);
+
+  if (reading != state[num].lStatus) {
+    state[num].dTime = millis();
+  }
+
+  if ((millis() - state[num].dTime) > debounceDelay) {
+    if (reading != state[num].cStatus) {
+      state[num].cStatus = reading;
+      Serial.println("have a input");
+      state[num].sent = 1;
+    }
+  }
+  state[num].lStatus = reading;
+}
+
+void analog_read(int num){ // analogRead, and shift to digital one to store
+  bool threshold;
+  int value      = analogRead(state[num].pin);
+  if(num < 4){  // if is joystick pin
+    if(num==0 || num==3)       // if is up or right
+      threshold = (value > MAXJOYSTICK);
+    else if (num==1 || num==2) // if is down or left
+      threshold = (value < MINJOYSTICK);
+  }
+  else          // if is hole pin
+    threshold = (value < MINTOUCH);
+
+  if (threshold)     // the status is pressed
+    state[num].cStatus    = 0;
+  else               // the status is released
+    state[num].cStatus    = 1;
+
+  if (state[num].lStatus != state[num].cStatus) { // handle it when its state changes
+    state[num].sent = 1;
+    state[num].lStatus = state[num].cStatus;
+  }
+}
+
+// read the analog, and shift to digital one to store in array
+void readStatus() {
   statusMode = digitalRead(Mode);
-  //if(statusMode == 0){    // hole switch
-    holeA1[0]  = analogRead(A1);
-    holeA2[0]  = analogRead(A2);
-    holeC[0]   = analogRead(A3);
-    holeD[0]   = analogRead(A4);
-    holeE[0]   = analogRead(A5);
-    holeF[0]   = analogRead(A6);
-    holeG[0]   = analogRead(A7);
-    holeA[0]   = analogRead(A8);
-    holeB[0]   = analogRead(A9);
-    holeCP[0]  = analogRead(A10);
-
-    if (holeA1[0] < MINTOUCH)    holeA1[1]  = 0;
-    else                      holeA1[1]   = 1;
-    if (holeA2[0] < MINTOUCH)    holeA2[1]   = 0;
-    else                      holeA2[1]   = 1;
-    if (holeC[0] < MINTOUCH)    holeC[1]   = 0;
-    else                      holeC[1]   = 1;
-    if (holeD[0] < MINTOUCH)    holeD[1]   = 0;
-    else                      holeD[1]   = 1;
-    if (holeE[0] < MINTOUCH)    holeE[1]   = 0;
-    else                      holeE[1]   = 1;
-    if (holeF[0] < MINTOUCH)    holeF[1]   = 0;
-    else                      holeF[1]   = 1;
-    if (holeG[0] < MINTOUCH)    holeG[1]   = 0;
-    else                      holeG[1]   = 1;
-    if (holeA[0] < MINTOUCH)    holeA[1]   = 0;
-    else                      holeA[1]   = 1;
-    if (holeB[0] < MINTOUCH)    holeB[1]   = 0;
-    else                      holeB[1]   = 1;
-    if (holeCP[0] < MINTOUCH)   holeCP[1]  = 0;
-    else                      holeCP[1]  = 1;
-//}
-  if(DEBUG){printValue();}
-}
-
-void printValue(){  // Serial Plotter
-  Serial.print(holeA1[0]);Serial.print(',');
-  Serial.print(holeA2[0]);Serial.print(',');
-  Serial.print(holeC[0]);Serial.print(',');
-  Serial.print(holeD[0]);Serial.print(',');
-  Serial.print(holeE[0]);Serial.print(',');
-  Serial.print(holeF[0]);Serial.print(',');
-  Serial.print(holeG[0]);Serial.print(',');
-  Serial.print(holeA[0]);Serial.print(',');
-  Serial.print(holeB[0]);Serial.print(',');
-  Serial.print(holeCP[0]);Serial.print(',');
-  Serial.print(0);Serial.print(',');
-  Serial.print(MINTOUCH);Serial.print(',');
-  Serial.println(1023);
+  if (statusMode == 0){  // Enable Hole Mode
+    analog_read(HoleUp);
+    analog_read(HoleLeft);
+    analog_read(HoleDown);
+    analog_read(HoleRight);
+    analog_read(HoleA);
+    analog_read(HoleB);
+    analog_read(HoleX);
+    analog_read(HoleY);
+    analog_read(HoleStart);
+    analog_read(HoleSelect);
   }
+  else{
+    debounced_read(PinUp);
+    debounced_read(PinDown);
+    debounced_read(PinLeft);
+    debounced_read(PinRight);
+    debounced_read(PinA);
+    debounced_read(PinB);
+    debounced_read(PinX);
+    debounced_read(PinY);
+    debounced_read(PinStart);
+    debounced_read(PinSelect);
 
-void holeHandle(int *holeAX){  // handle for hole function
-  if(holeAX[2] != holeAX[1]){  // Status change
-    if(holeAX[1] == 0){   // one hole conducts, produce corresponding sound
-      noteOn(channel, (holeAX[3] + mod), currentVelocity);
-      holeAX[4] = holeAX[3] + mod;
-      Serial.print("noteOn  ");Serial.println(holeAX[3] + mod);
-    }
-    else{  // hole conducts, no sound is produced
-      noteOff(channel, holeAX[4], currentVelocity);
-      Serial.print("      noteOff  ");Serial.println(holeAX[4]);
-    }
-    holeAX[2] = holeAX[1];
+    analog_read(AxisUp);
+    analog_read(AxisDown);
+    analog_read(AxisLeft);
+    analog_read(AxisRight);
   }
-  //delay(20);
 }
 
-int channelDebug(){// configure channel
-  // press A once, add 1 to channel value, press B once, take 1 from channel value
-  // after configuration, we know keyboard channel is 0, drum channel is 9.
-  int a = digitalRead(channelPlus);
-  int b = digitalRead(channelMinus);
-  int channel = 0;
-  if(a == 0){  // add to channel
-    while(a == 0){a = digitalRead(channelPlus);}
-    if(a == 1){
-      channel += 1;
-      if(channel > 15){channel = 15;}
-    }
+// Serial Plotter
+void debug(int value){
+  Serial.print(value);Serial.print(',');
+}
+void printValue(bool holes, bool axis, bool pins){
+  if (holes){ // printValue holes status
+    debug(state[HoleUp].cStatus);
+    debug(state[HoleLeft].cStatus);
+    debug(state[HoleDown].cStatus);
+    debug(state[HoleRight].cStatus);
+    debug(state[HoleSelect].cStatus);
+    debug(state[HoleStart].cStatus);
+    debug(state[HoleA].cStatus);
+    debug(state[HoleB].cStatus);
+    debug(state[HoleX].cStatus);
+    debug(state[HoleY].cStatus);
+    debug(MINTOUCH);
   }
-
-  if(b == 0){  // take from channel
-    while(b == 0){b = digitalRead(channelMinus);}
-    if(b == 1){
-        channel -= 1;
-        if(channel < 0){channel = 0;}
-    }
+  if (axis){ // printValue axis status
+    debug(state[AxisUp].cStatus);
+    debug(state[AxisDown].cStatus);
+    debug(state[AxisLeft].cStatus);
+    debug(state[AxisRight].cStatus);
+    debug(state[AxisUp].lStatus);
+    debug(state[AxisDown].lStatus);
+    debug(state[AxisLeft].lStatus);
+    debug(state[AxisRight].lStatus);
   }
-  return channel;
-}
-
-int controlOctave(){// A1,A2 is control scale adjustment
-  if((holeA1[1] + holeA2[1]) == 0) // A1 and A2 conduct, shift to an transpose up
-    mod = 1;
-  else if (holeA1[1] == 0)  // A1 conducts, shift to an octave up
-    mod = 12;
-  else if (holeA2[1] == 0)  // A2 conducts, shift to an octave down
-    mod = -12;
-  else
-    mod = 0;
-  return mod;
-}
-
-void scan(){ // scan all the buttons status
- /*// configure channel
-  channelDebug();
- */
-  // A1 A2
-  mod = controlOctave();
-  // C
-  holeHandle(holeC);
-  // D
-  holeHandle(holeD);
-  // E
-  holeHandle(holeE);
-  // F
-  holeHandle(holeF);
-  // G
-  holeHandle(holeG);
-  // A
-  holeHandle(holeA);
-  // B
-  holeHandle(holeB);
-  // CP
-  holeHandle(holeCP);
-}
-
-void loop() {
-  readStatus();
-  scan();
+  if (pins){ // printValue pins status
+    debug(state[PinUp].cStatus);
+    debug(state[PinDown].cStatus);
+    debug(state[PinLeft].cStatus);
+    debug(state[PinRight].cStatus);
+    debug(state[PinA].cStatus);
+    debug(state[PinB].cStatus);
+    debug(state[PinX].cStatus);
+    debug(state[PinY].cStatus);
+    debug(state[PinStart].cStatus);
+    debug(state[PinSelect].cStatus);
+  }
+  Serial.println(' ');
 }
 
 // First parameter is the event type (0x09 = note on, 0x08 = note off).
@@ -219,4 +304,82 @@ void controlChange(byte chn, byte ctrl, byte value) {
   midiEventPacket_t event = {0x0B, 0xB0 | chn, ctrl, value};
   MidiUSB.sendMIDI(event);
   MidiUSB.flush();
+}
+
+// Handle for Buttons function
+void midiHandle(int num){
+  if (state[num].sent) {
+    if (state[num].cStatus == 0){
+      debug(state[num].cStatus);debug(state[num].lStatus);
+      //Serial.print(num);Serial.println(" pressed");
+      noteOn(channel, (state[num].cNote + mod), currentVelocity);
+      state[num].lNote = state[num].cNote + mod;
+      Serial.print("noteOn  ");Serial.println(state[num].lNote);
+    }
+    else
+      noteOff(channel, state[num].lNote, currentVelocity);
+      Serial.print("      noteOff  ");Serial.println(state[num].lNote);
+    state[num].sent = 0;
+  }
+  delay(1);
+}
+
+int controlOctave(){// A1,A2 is control scale adjustment
+  int ctrl1, ctrl2;
+  if (state[AxisUp].cStatus == 0  ||
+      state[HoleUp].cStatus == 0 ||
+      state[PinUp].cStatus == 0)
+    ctrl1 = 0;
+  else
+    ctrl1 = 1;
+
+  if (state[AxisLeft].cStatus == 0  ||
+      state[PinLeft].cStatus == 0 ||
+      state[HoleLeft].cStatus == 0)
+    ctrl2 = 0;
+  else
+    ctrl2 = 1;
+
+  if((ctrl1 + ctrl2) == 0) // A1 and A2 conduct, shift to an transpose up
+    mod = 1;
+  else if (ctrl1 == 0)  // A1 conducts, shift to an octave up
+    mod = 12;
+  else if (ctrl2 == 0)  // A2 conducts, shift to an octave down
+    mod = -12;
+  else
+    mod = 0;
+}
+
+// scan all buttons state
+void scan() {
+  // Buttons
+  if (statusMode == 0){  // Enable Hole Mode
+    midiHandle(HoleDown);
+    midiHandle(HoleRight);
+    midiHandle(HoleA);
+    midiHandle(HoleB);
+    midiHandle(HoleX);
+    midiHandle(HoleY);
+    midiHandle(HoleStart);
+    midiHandle(HoleSelect);
+  }
+  else {
+    midiHandle(PinDown);
+    midiHandle(PinRight);
+    midiHandle(AxisDown);
+    midiHandle(AxisRight);
+    midiHandle(PinA);
+    midiHandle(PinB);
+    midiHandle(PinX);
+    midiHandle(PinY);
+    midiHandle(PinStart);
+    midiHandle(PinSelect);
+  }
+}
+
+void loop() {
+  readStatus();
+  //printValue(1,1,1); // holes, axis, pins
+  scan();
+  controlOctave();
 }

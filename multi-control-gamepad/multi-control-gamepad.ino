@@ -29,29 +29,29 @@
 #define debounceDelay 20
 
 #define AxisUp      0
-#define AxisDown    1
-#define AxisLeft    2
+#define AxisLeft    1
+#define AxisDown    2
 #define AxisRight   3
 #define PinUp       4
-#define PinDown     5
-#define PinLeft     6
+#define PinLeft     5
+#define PinDown     6
 #define PinRight    7
 #define HoleUp      8
-#define HoleDown    9
-#define HoleLeft    10
+#define HoleLeft    9
+#define HoleDown    10
 #define HoleRight   11
 #define PinA        12
 #define PinB        13
 #define PinX        14
 #define PinY        15
-#define PinStart    16
-#define PinSelect   17
+#define PinSelect   16
+#define PinStart    17
 #define HoleA       18
 #define HoleB       19
 #define HoleX       20
 #define HoleY       21
-#define HoleStart   22
-#define HoleSelect  23
+#define HoleSelect  22
+#define HoleStart   23
 
 // threshold of the joystick to shift to digital value, if larger than MAX, UP input; if smaller than MAX, DOWN input.
 int MAXJOYSTICK = 1023 - JOYSTICK_SENSITIVITY;
@@ -117,25 +117,25 @@ status_struct  state[] = {
   {joystickYAxis, 0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
   {joystickXAxis, 0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
   {pinUp,         0, 0, JOYSTICK_UP,     Y_AXIS, 0, 0},
-  {pinDown,       0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
   {pinLeft,       0, 0, JOYSTICK_LEFT,   X_AXIS, 0, 0},
+  {pinDown,       0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
   {pinRight,      0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
   {holeUp,        0, 0, JOYSTICK_UP,     Y_AXIS, 0, 0},
-  {holeDown,      0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
   {holeLeft,      0, 0, JOYSTICK_LEFT,   X_AXIS, 0, 0},
+  {holeDown,      0, 0, JOYSTICK_DOWN,   Y_AXIS, 0, 0},
   {holeRight,     0, 0, JOYSTICK_RIGHT,  X_AXIS, 0, 0},
   {pinA,          0, 0, JOYSTICK_A,      NULL,   0, 0},
   {pinB,          0, 0, JOYSTICK_B,      NULL,   0, 0},
   {pinX,          0, 0, JOYSTICK_X,      NULL,   0, 0},
   {pinY,          0, 0, JOYSTICK_Y,      NULL,   0, 0},
-  {pinStart,      0, 0, JOYSTICK_START,  NULL,   0, 0},
   {pinSelect,     0, 0, JOYSTICK_SELECT, NULL,   0, 0},
+  {pinStart,      0, 0, JOYSTICK_START,  NULL,   0, 0},
   {holeA,         0, 0, JOYSTICK_A,      NULL,   0, 0},
   {holeB,         0, 0, JOYSTICK_B,      NULL,   0, 0},
   {holeX,         0, 0, JOYSTICK_X,      NULL,   0, 0},
   {holeY,         0, 0, JOYSTICK_Y,      NULL,   0, 0},
-  {holeStart,     0, 0, JOYSTICK_START,  NULL,   0, 0},
-  {holeSelect,    0, 0, JOYSTICK_SELECT, NULL,   0, 0}};
+  {holeSelect,    0, 0, JOYSTICK_SELECT, NULL,   0, 0},
+  {holeStart,     0, 0, JOYSTICK_START,  NULL,   0, 0}};
 //==============================================
 
 // initialize the buttons' inputs:

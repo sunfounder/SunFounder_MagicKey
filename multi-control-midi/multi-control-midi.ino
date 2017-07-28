@@ -74,16 +74,17 @@ int JOYSTICK_RIGHT = -JOYSTICK_LEFT;
 // set pin numbers for the buttons:
 const int joystickXAxis    = A0;
 const int joystickYAxis    = A11;
-const int pinUp            = 16;
-const int pinLeft          = 15;
-const int pinDown          = 14;
-const int pinRight         = 13;
-const int pinA             = 3;
-const int pinB             = 2;
-const int pinX             = 11;
-const int pinY             = 5;
-const int pinStart         = 0;
-const int pinSelect        = 1;
+const int pinUp            = 16;  //Ctrl 1
+const int pinLeft          = 15;  //Ctrl 2
+const int pinDown          = 14;  //C
+const int pinRight         = 13;  //D
+const int pinSelect        = 1;   //E
+const int pinStart         = 0;   //F
+const int pinA             = 3;   //G
+const int pinB             = 2;   //A
+const int pinX             = 11;  //B
+const int pinY             = 5;   //C+
+
 const int Mode             = 7;
 
 // analog clip hole:

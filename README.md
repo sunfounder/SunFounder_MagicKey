@@ -1,4 +1,4 @@
-## SunFounder_Multi\_Control
+## SunFounder_MagicKey：
 SunFounder MagicKey
 
 Quick Links:
@@ -23,6 +23,8 @@ In the PC keyboard mode, all the connected conductive objects are mapped to some
 
 2017-03-15:
  - v1.0.0
+2017-09-15：
+ - v2.0.0 rename
 
 ----------------------------------------------
 <a id="about_sunfounder"></a>
@@ -44,9 +46,9 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-SunFounder_Multi_Control comes with ABSOLUTELY NO WARRANTY; for details run ./show w. This is free software, and you are welcome to redistribute it under certain conditions; run ./show c for details.
+SunFounder_MagicKey comes with ABSOLUTELY NO WARRANTY; for details run ./show w. This is free software, and you are welcome to redistribute it under certain conditions; run ./show c for details.
 
-SunFounder, Inc., hereby disclaims all copyright interest in the program 'SunFounder_Multi_Control' (which makes passes at compilers).
+SunFounder, Inc., hereby disclaims all copyright interest in the program 'SunFounder_MagicKey' (which makes passes at compilers).
 
 Mike Huang, 21 August 2015
 

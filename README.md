@@ -22,9 +22,10 @@ In the PC keyboard mode, all the connected conductive objects are mapped to some
 ### Updates:
 
 2017-03-15:
- - v1.0.0
-2017-09-15：
- - v2.0.0 rename
+ - v1.0.0 
+
+2017-09-15: 
+ - v2.0.0  rename
 
 ----------------------------------------------
 <a id="about_sunfounder"></a>

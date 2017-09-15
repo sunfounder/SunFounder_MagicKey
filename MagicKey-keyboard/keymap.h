@@ -4,14 +4,14 @@
 
 // you can check the button modifer in list if you want to customize the value at the right of equal sign
 // KEYBOARD_MODE
-int KEYBOARD_UP     = KEY_UP_ARROW;
-int KEYBOARD_DOWN   = KEY_DOWN_ARROW;
-int KEYBOARD_LEFT   = KEY_LEFT_ARROW;
-int KEYBOARD_RIGHT  = KEY_RIGHT_ARROW;
-int KEYBOARD_A      = KEY_LEFT_CTRL;
-int KEYBOARD_B      = KEY_LEFT_ALT;
-int KEYBOARD_X      = 'z';
-int KEYBOARD_Y      = 'x';
+int KEYBOARD_UP     = 'w';
+int KEYBOARD_DOWN   = 's';
+int KEYBOARD_LEFT   = 'a';
+int KEYBOARD_RIGHT  = 'd';
+int KEYBOARD_A      = 'k';
+int KEYBOARD_B      = 'j';
+int KEYBOARD_X      = 'i';
+int KEYBOARD_Y      = 'u';
 int KEYBOARD_SELECT = KEY_SPACE;
 int KEYBOARD_START  = KEY_RETURN;
 
